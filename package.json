@@ -1,0 +1,50 @@
+{
+  "name": "ghost-imports-buster",
+  "version": "0.0.0",
+  "description": "Enforce the presence of all imported dependencies in your package configuration",
+  "main": "lib/index.js",
+  "author": "Marc Cataford <marc.cataford@tophatmonocle.com>",
+  "license": "MIT",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "install:clean": "yarn clean:modules && yarn",
+    "prebuild": "yarn clean:lib",
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watchAll",
+    "lint": "eslint src/*.ts",
+    "lint:fix": "eslint src/*.ts --fix",
+    "clean:modules": "rimraf node_modules",
+    "clean:lib": "rimraf lib/*"
+  },
+  "devDependencies": {
+    "@tophat/eslint-config": "^0.3.1",
+    "@types/jest": "^24.0.23",
+    "@types/node": "^12.12.7",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-jest": "^23.0.4",
+    "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^3.0.9",
+    "jest": "^24.9.0",
+    "prettier": "^1.19.1",
+    "rimraf": "^3.0.0",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.7.3",
+    "@babel/traverse": "^7.7.2",
+    "chalk": "^3.0.0"
+  },
+  "husky": {
+    "hooks": {
+        "pre-commit": "yarn lint && yarn test"
+    }
+  }
+}
