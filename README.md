@@ -1,5 +1,5 @@
 # Ghost Imports Buster
-###### :ghost I ain't afraid of no ghost
+###### :ghost: I ain't afraid of no ghost
 
 ---
 
