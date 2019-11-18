@@ -38,7 +38,7 @@ export const discoverSourceFiles = (sourcePath: string): string[] => {
 
 export const getImportsFromFile = (path: string): string[] => {
     const sourceCode: string = readFileSync(path, { encoding: 'utf-8' })
-    const ast = parse(sourceCode, { sourceType: 'module' })
+    const ast = parse(sourceCode, { sourceType: 'module', plugins: ['jsx'] })
     const dependencies: string[] = []
 
     traverse(ast, {
