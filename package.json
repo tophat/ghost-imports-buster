@@ -40,11 +40,12 @@
   "dependencies": {
     "@babel/parser": "^7.7.3",
     "@babel/traverse": "^7.7.2",
-    "chalk": "^3.0.0"
+    "chalk": "^3.0.0",
+    "commander": "^4.0.1"
   },
   "husky": {
     "hooks": {
-        "pre-commit": "yarn lint && yarn test"
+      "pre-commit": "yarn lint && yarn test"
     }
   }
 }

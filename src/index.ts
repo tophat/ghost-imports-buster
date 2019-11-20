@@ -9,18 +9,23 @@ import {
     getUndeclaredDependencies,
     getUnusedDependencies,
 } from './useCases'
+import parseCliArgs from './cli'
 
 const validateDependencies = (
     packageConfigPath = './package.json',
-    sourceFilesPath: string,
+    sourcePaths: string[],
 ): void => {
     const packageConfigRaw = readFileSync(packageConfigPath, {
         encoding: 'utf-8',
     })
     const packageConfig = JSON.parse(packageConfigRaw)
     const expectedDependencies = gatherPackageConfigDependencies(packageConfig)
-
-    const sourceFiles = discoverSourceFiles(sourceFilesPath)
+    const sourceFiles = sourcePaths.reduce(
+        (sourceList: string[], source: string): string[] => {
+            return [...sourceList, ...discoverSourceFiles(source)]
+        },
+        [],
+    )
     const importedDependencies = getImportsFromFiles(sourceFiles)
 
     const allDependencies = Object.values(
@@ -43,7 +48,7 @@ const validateDependencies = (
     else {
         console.log(
             chalk.yellowBright(
-                `The following dependencies are declared in ${packageConfigPath} but are not imported anywhere in ${sourceFilesPath}:`,
+                `The following dependencies are declared in ${packageConfigPath} but are not imported anywhere in ${sourcePaths}:`,
             ),
         )
         unused.forEach((dep: string) => {
@@ -65,6 +70,7 @@ const validateDependencies = (
     }
 }
 
-const packagePath = process.argv[2]
-const sourcePath = process.argv[3]
-validateDependencies(packagePath, sourcePath)
+const cliArgs = process.argv
+const runParams = parseCliArgs(cliArgs)
+const packagePath = './package.json'
+validateDependencies(packagePath, runParams)
