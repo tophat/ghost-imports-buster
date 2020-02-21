@@ -22,11 +22,15 @@ export function discoverSourceFiles(sourcePath: string): string[] {
 
     const currentContent = readdirSync(sourcePath)
     return currentContent.reduce((acc: string[], current: string): string[] => {
-        const stat = lstatSync(`${sourcePath}/${current}`)
+        const path = `${sourcePath}/${current}`
+
+        if (path.includes('node_modules')) return acc
+
+        const stat = lstatSync(path)
         if (stat.isDirectory()) {
-            return [...acc, ...discoverSourceFiles(`${sourcePath}/${current}`)]
+            return [...acc, ...discoverSourceFiles(path)]
         } else if (isValidSourceFile(current)) {
-            return [...acc, `${sourcePath}/${current}`]
+            return [...acc, path]
         }
 
         return acc

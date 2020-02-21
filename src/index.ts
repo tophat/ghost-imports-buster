@@ -1,45 +1,20 @@
-import { readFileSync } from 'fs'
-
 import chalk from 'chalk'
 
 import {
+    diffDependenciesLists,
     discoverSourceFiles,
-    gatherPackageConfigDependencies,
+    extractDeclaredDependencies,
     getImportsFromFiles,
-    getUndeclaredDependencies,
-    getUnusedDependencies,
 } from './useCases'
 import parseCliArgs from './cli'
 
-const validateDependencies = (
-    packageConfigPath = './package.json',
-    sourcePaths: string[],
-): void => {
-    const packageConfigRaw = readFileSync(packageConfigPath, {
-        encoding: 'utf-8',
-    })
-    const packageConfig = JSON.parse(packageConfigRaw)
-    const expectedDependencies = gatherPackageConfigDependencies(packageConfig)
-    const sourceFiles = sourcePaths.reduce(
-        (sourceList: string[], source: string): string[] => {
-            return [...sourceList, ...discoverSourceFiles(source)]
-        },
-        [],
-    )
+function validateDependencies(projectPath: string): void {
+    const declaredDependencies = extractDeclaredDependencies(projectPath)
+    const sourceFiles = discoverSourceFiles(projectPath)
     const importedDependencies = getImportsFromFiles(sourceFiles)
 
-    const allDependencies = Object.values(
-        expectedDependencies,
-    ).reduce((acc: string[], current: string[]): string[] => [
-        ...acc,
-        ...current,
-    ])
-    const unused = getUnusedDependencies(
-        expectedDependencies.dependencies,
-        importedDependencies,
-    )
-    const undeclared = getUndeclaredDependencies(
-        allDependencies,
+    const { left: unused, right: undeclared } = diffDependenciesLists(
+        declaredDependencies,
         importedDependencies,
     )
 
@@ -48,7 +23,7 @@ const validateDependencies = (
     else {
         console.log(
             chalk.yellowBright(
-                `The following dependencies are declared in ${packageConfigPath} but are not imported anywhere in ${sourcePaths}:`,
+                `The following dependencies are declared in ${projectPath}/package.json but are not imported anywhere:`,
             ),
         )
         unused.forEach((dep: string) => {
@@ -61,7 +36,7 @@ const validateDependencies = (
     else {
         console.log(
             chalk.yellowBright(
-                `The following dependencies are imported but not declared in ${packageConfigPath}`,
+                `The following dependencies are imported but not declared in ${projectPath}`,
             ),
         )
         undeclared.forEach((dep: string) => {
@@ -72,5 +47,4 @@ const validateDependencies = (
 
 const cliArgs = process.argv
 const runParams = parseCliArgs(cliArgs)
-const packagePath = './package.json'
-validateDependencies(packagePath, runParams)
+validateDependencies(runParams[0])
