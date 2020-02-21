@@ -19,7 +19,7 @@ function validateDependencies(projectPath: string): void {
     )
 
     if (unused.length === 0)
-        console.log(chalk.greenBright`No unused dependencies!`)
+        console.log(chalk.greenBright`🎉No unused dependencies! 🎉`)
     else {
         console.log(
             chalk.yellowBright(
@@ -27,12 +27,12 @@ function validateDependencies(projectPath: string): void {
             ),
         )
         unused.forEach((dep: string) => {
-            console.log(dep)
+            console.log(`👀 ${dep}`)
         })
     }
 
     if (undeclared.length === 0)
-        console.log(chalk.greenBright`No undeclared dependencies!`)
+        console.log(chalk.greenBright`✨No undeclared dependencies!✨`)
     else {
         console.log(
             chalk.yellowBright(
@@ -40,7 +40,7 @@ function validateDependencies(projectPath: string): void {
             ),
         )
         undeclared.forEach((dep: string) => {
-            console.log(dep)
+            console.log(`👻 ${dep}`)
         })
     }
 }
