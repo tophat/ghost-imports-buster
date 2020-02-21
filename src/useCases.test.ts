@@ -10,6 +10,7 @@ import {
 import { es6Source, requireSource } from './testConstants'
 
 const nonSourceFiles = {
+    'node_modules/@babel/yeet': 'dang',
     'README.md': 'yeet',
 }
 
