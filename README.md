@@ -13,13 +13,11 @@ Having these ghostly imports can cause a whole lot of issues, ranging from cases
 
 ## Installation
 
-```
-yarn add ghost-imports-buster -D
-```
+_Coming soon._
 
 ## Usage
 
-You can run the imports check by using `gimports <path/to/package.json> <path/to/your/src/root>`.
+_Coming Soon._
 
 ## Contributing
 
