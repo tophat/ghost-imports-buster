@@ -1,153 +1,149 @@
-import * as fs from 'fs'
+import mockFS from 'mock-fs'
 
-import { MockFileTree, MockStat } from './mockTypes.d'
 import {
-    mockFileTree,
-    mockJSXSourceWithImports,
-    mockJSXSourceWithoutImports,
-    mockPackageConfig,
-    mockSourceWithImports,
-    mockSourceWithoutImports,
-} from './mocks'
-import * as useCases from './useCases'
+    diffDependenciesLists,
+    discoverSourceFiles,
+    extractDeclaredDependencies,
+    getImportsFromFile,
+    getImportsFromFiles,
+} from './useCases'
+import { es6Source, requireSource } from './testConstants'
 
-jest.mock('fs')
-
-const prepareFileTreeMocks = (mockTree: MockFileTree): void => {
-    jest.spyOn(fs, 'lstatSync').mockImplementation(
-        (path: fs.PathLike): MockStat => {
-            return {
-                ...fs.Stats.prototype,
-                isDirectory: (): boolean => mockTree[path as string].isDir,
-                isFile: (): boolean => !mockTree[path as string].isDir,
-            }
-        },
-    )
-    jest.spyOn(fs, 'readdirSync').mockImplementation(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (path: fs.PathLike): any => {
-            return mockTree[path as string].children
-        },
-    )
+const nonSourceFiles = {
+    'README.md': 'yeet',
 }
 
-describe('Package Dependency Validator', () => {
-    it('extracts dependency list from package config', () => {
-        const dependencies = useCases.gatherPackageConfigDependencies(
-            mockPackageConfig,
-        )
-        const expected = {
-            dependencies: [],
-            devDependencies: Object.keys(mockPackageConfig.devDependencies),
-            peerDependencies: [],
-        }
-        expect(dependencies).toEqual(expected)
+const sourceFiles = {
+    './yeet.js': es6Source,
+    './yeets/yoot.ts': requireSource,
+}
+
+const mockFileSystem = {
+    ...nonSourceFiles,
+    ...sourceFiles,
+}
+
+describe('Use cases', () => {
+    beforeEach(() => {
+        jest.restoreAllMocks()
+        mockFS(mockFileSystem)
     })
 
-    describe('discoverSourceFiles', () => {
+    afterEach(() => {
+        mockFS.restore()
+    })
+
+    describe('Extracting imports from single files', () => {
+        it('Using ES6 imports', () => {
+            const extracted = getImportsFromFile('yeet.js')
+
+            expect(new Set(extracted)).toEqual(
+                new Set(['yeets', '@yeets/sticks']),
+            )
+        })
+
+        it('Using require imports', () => {
+            const extracted = getImportsFromFile('yeets/yoot.ts')
+
+            expect(new Set(extracted)).toEqual(
+                new Set(['yeets', '@yeets/sticks']),
+            )
+        })
+    })
+
+    describe('Extracting imports from multiple files', () => {
+        it('With multiple files', () => {
+            const paths = ['yeet.js', 'yeets/yoot.ts']
+
+            const extracted = getImportsFromFiles(paths)
+
+            expect(new Set(extracted)).toEqual(
+                new Set(['yeets', '@yeets/sticks']),
+            )
+        })
+    })
+
+    describe('Dependencies list diffing', () => {
+        it('correctly diffs', () => {
+            const left = ['yeet', 'dang', 'sticks']
+            const right = ['yeet', 'yeetas']
+
+            const diffReport = diffDependenciesLists(left, right)
+
+            expect(diffReport.left).toEqual(['dang', 'sticks'])
+            expect(diffReport.right).toEqual(['yeetas'])
+            expect(diffReport.union).toEqual(['yeet'])
+        })
+
+        it('filters if a filter is provided', () => {
+            const left = ['yeet', 'dang', 'sticks']
+            const right = ['yeet', 'yeetas']
+            const filter = (name: string): boolean => !name.includes('yeet')
+
+            const diffReport = diffDependenciesLists(left, right, filter)
+
+            expect(diffReport.left).toEqual(['dang', 'sticks'])
+            expect(diffReport.right).toEqual([])
+            expect(diffReport.union).toEqual([])
+        })
+    })
+
+    describe('Source file discovery', () => {
+        it('finds source files', () => {
+            const discoveredFiles = discoverSourceFiles('.')
+            expect(discoveredFiles).toEqual(Object.keys(sourceFiles))
+        })
+
+        it('finds source files with file as path', () => {
+            const discoveredFiles = discoverSourceFiles('yeet.js')
+            expect(discoveredFiles).toEqual(['yeet.js'])
+        })
+    })
+
+    describe('Extract declared dependencies list from package', () => {
         beforeEach(() => {
-            jest.restoreAllMocks()
-            prepareFileTreeMocks(mockFileTree)
+            mockFS.restore()
+        })
+        it('works with default path', () => {
+            const mockPackageJSON = {
+                dependencies: {
+                    yeet: '^1.0.0',
+                    sticks: '^2.0.0',
+                    '@babel/yeet': '^9.9.9',
+                },
+            }
+            mockFS({
+                'package.json': JSON.stringify(mockPackageJSON),
+            })
+
+            const extracted = extractDeclaredDependencies()
+
+            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
         })
 
-        it('collects all files that are descendents of the given path if path is a directory', () => {
-            const discovered = useCases.discoverSourceFiles(
-                mockFileTree.dir1.name,
-            )
-            expect(discovered).toEqual(['dir1/file2', 'dir1/dir2/file3'])
+        it('works', () => {
+            const mockPackageJSON = {
+                dependencies: {
+                    yeet: '^1.0.0',
+                    sticks: '^2.0.0',
+                    '@babel/yeet': '^9.9.9',
+                },
+            }
+            mockFS({
+                'package.json': JSON.stringify(mockPackageJSON),
+            })
+
+            const extracted = extractDeclaredDependencies('.')
+
+            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
         })
 
-        it('collects only the target file if the path is a file', () => {
-            const discovered = useCases.discoverSourceFiles(
-                mockFileTree.file1.name,
-            )
-            expect(discovered).toEqual(['file1'])
-        })
-    })
+        it('errors', () => {
+            mockFS({})
 
-    describe('getImportsFromFile', () => {
-        it.each`
-            case                     | mock
-            ${'JS without imports'}  | ${mockSourceWithoutImports}
-            ${'JSX without imports'} | ${mockJSXSourceWithoutImports}
-        `(
-            'returns an empty list if there are no dependencies for $case',
-            ({ mock }) => {
-                jest.spyOn(fs, 'readFileSync').mockReturnValue(mock)
+            const extracted = extractDeclaredDependencies('.')
 
-                const imports = useCases.getImportsFromFile('some/file/path')
-                expect(imports).toHaveLength(0)
-            },
-        )
-
-        it.each`
-            case                  | mock                        | expected
-            ${'JS with imports'}  | ${mockSourceWithImports}    | ${['fs', './index']}
-            ${'JSX with imports'} | ${mockJSXSourceWithImports} | ${['react', './index']}
-        `(
-            'returns a list of imports if there are one or more imports for $case',
-            ({ mock, expected }) => {
-                jest.spyOn(fs, 'readFileSync').mockReturnValue(mock)
-
-                const imports = useCases.getImportsFromFile('some/file/path')
-                expect(imports).toEqual(expected)
-            },
-        )
-    })
-
-    describe('getImportsFromFiles', () => {
-        it('calls getImportsFromFile for each given path', () => {
-            const mock = jest.spyOn(useCases, 'getImportsFromFile')
-
-            const mockPaths = ['a', 'b', 'c', 'd']
-
-            useCases.getImportsFromFiles(mockPaths)
-
-            expect(mock).toHaveBeenCalledTimes(mockPaths.length)
-        })
-    })
-
-    describe('getDependenciesDiff', () => {
-        it('returns the difference of what is in A but not in B', () => {
-            const first = ['a', 'b', 'c', 'd']
-            const second = ['a', 'b', 'c']
-            expect(useCases.getDependenciesDiff(first, second)).toEqual(['d'])
-        })
-
-        it('applies the option filter', () => {
-            const first = ['a', 'b', 'c', 'd', 'e']
-            const second = ['a', 'b', 'c']
-            const filter = (value: string): boolean => value !== 'd'
-            expect(
-                useCases.getDependenciesDiff(first, second, filter),
-            ).toEqual(['e'])
-        })
-    })
-
-    describe('getUnusedDependencies', () => {
-        it('calls getDependenciesDiff', () => {
-            const mock = jest.spyOn(useCases, 'getDependenciesDiff')
-            const mockFirst = ['a']
-            const mockSecond = ['b']
-            useCases.getUnusedDependencies(mockFirst, mockSecond)
-            expect(mock).toHaveBeenCalledWith(mockFirst, mockSecond)
-        })
-    })
-
-    describe('getUndeclaredDependencies', () => {
-        it('calls getDependenciesDiff with a filter', () => {
-            const mock = jest.spyOn(useCases, 'getDependenciesDiff')
-            jest.spyOn(useCases, 'isBuiltIn').mockImplementation(
-                (): boolean => false,
-            )
-            const mockFirst = ['a']
-            const mockSecond = ['b']
-            useCases.getUndeclaredDependencies(mockFirst, mockSecond)
-            expect(mock).toHaveBeenCalledWith(
-                mockSecond,
-                mockFirst,
-                useCases.isBuiltIn,
-            )
+            expect(extracted).toEqual([])
         })
     })
 })
