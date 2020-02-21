@@ -1,27 +1,22 @@
 import { lstatSync, readFileSync, readdirSync } from 'fs'
 
-import { parse } from '@babel/parser'
-import traverse from '@babel/traverse'
+import { DiffReport } from './types.d'
+import { ES6_IMPORT_STATEMENT, REQUIRE_IMPORT_STATEMENT } from './constants'
+import { isValidSourceFile } from './helpers'
 
-import { PackageConfig, PackageDependencies } from './types.d'
-
-export const gatherPackageConfigDependencies = (
-    packageConfig: PackageConfig,
-): PackageDependencies => {
-    const {
-        dependencies = {},
-        devDependencies = {},
-        peerDependencies = {},
-    } = packageConfig
-
-    return {
-        dependencies: Object.keys(dependencies),
-        devDependencies: Object.keys(devDependencies),
-        peerDependencies: Object.keys(peerDependencies),
+export function extractDeclaredDependencies(packagePath = '.'): string[] {
+    try {
+        const packageFile = readFileSync(`${packagePath}/package.json`, {
+            encoding: 'utf-8',
+        })
+        const parsedPackageFile = JSON.parse(packageFile)
+        return Object.keys(parsedPackageFile.dependencies)
+    } catch (e) {
+        return []
     }
 }
 
-export const discoverSourceFiles = (sourcePath: string): string[] => {
+export function discoverSourceFiles(sourcePath: string): string[] {
     const currentEntity = lstatSync(sourcePath)
     if (currentEntity.isFile()) return [sourcePath]
 
@@ -30,63 +25,73 @@ export const discoverSourceFiles = (sourcePath: string): string[] => {
         const stat = lstatSync(`${sourcePath}/${current}`)
         if (stat.isDirectory()) {
             return [...acc, ...discoverSourceFiles(`${sourcePath}/${current}`)]
-        } else {
+        } else if (isValidSourceFile(current)) {
             return [...acc, `${sourcePath}/${current}`]
         }
+
+        return acc
     }, [])
 }
 
-export const getImportsFromFile = (path: string): string[] => {
-    const sourceCode: string = readFileSync(path, { encoding: 'utf-8' })
-    const ast = parse(sourceCode, { sourceType: 'module', plugins: ['jsx'] })
-    const dependencies: string[] = []
+export function getImportsFromFile(path: string): string[] {
+    const fileSource = readFileSync(path, { encoding: 'utf-8' })
+    const importPatterns = [ES6_IMPORT_STATEMENT, REQUIRE_IMPORT_STATEMENT]
+    const imported: string[] = []
 
-    traverse(ast, {
-        ImportDeclaration(path) {
-            dependencies.push(path?.node?.source?.value)
-        },
+    importPatterns.forEach((pattern: RegExp): void => {
+        let currentMatch = pattern.exec(fileSource)
+
+        while (currentMatch) {
+            imported.push(currentMatch[1])
+            currentMatch = pattern.exec(fileSource)
+        }
     })
 
-    return dependencies
+    return imported
 }
 
-export const getImportsFromFiles = (paths: string[]): string[] =>
-    paths.reduce(
+export function getImportsFromFiles(paths: string[]): string[] {
+    return paths.reduce(
         (acc: string[], current: string): string[] => [
             ...acc,
             ...getImportsFromFile(current),
         ],
         [],
     )
-
-export const getDependenciesDiff = (
-    first: string[],
-    second: string[],
-    filter: Function = (): boolean => true,
-): string[] => {
-    const reduceHandler = (diff: string[], current: string): string[] => {
-        const isDiff = !second.includes(current) && filter(current)
-        return isDiff ? [...diff, current] : diff
-    }
-
-    return first.reduce(reduceHandler, [])
 }
 
-export const getUnusedDependencies = (
-    dependencies: string[],
-    imported: string[],
-): string[] => getDependenciesDiff(dependencies, imported)
+export function diffDependenciesLists(
+    left: string[],
+    right: string[],
+    filter: Function = (): boolean => true,
+): DiffReport {
+    const unionSet = new Set([...left, ...right])
+    const reduceHandler = function(
+        report: DiffReport,
+        current: string,
+    ): DiffReport {
+        if (!filter(current)) return report
 
-export const isBuiltIn = (packageName: string): boolean => {
+        const inLeft = left.includes(current)
+        const inRight = right.includes(current)
+
+        if (inLeft && !inRight) report.left.push(current)
+        if (inRight && !inLeft) report.right.push(current)
+        if (inRight && inLeft) report.union.push(current)
+
+        return report
+    }
+
+    const reportBase = { left: [], right: [], union: [] }
+    return Array.from(unionSet).reduce(reduceHandler, reportBase)
+}
+
+/*
+export function isBuiltIn(packageName: string): boolean {
     try {
         return !require.resolve(packageName).includes('node_modules')
     } catch (e) {
         console.log(e)
         return false
     }
-}
-
-export const getUndeclaredDependencies = (
-    dependencies: string[],
-    imported: string[],
-): string[] => getDependenciesDiff(imported, dependencies, isBuiltIn)
+}*/
