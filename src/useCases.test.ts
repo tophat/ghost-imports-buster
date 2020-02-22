@@ -6,7 +6,7 @@ import {
     extractDeclaredDependencies,
     getImportsFromFile,
     getImportsFromFiles,
-} from '../src/useCases'
+} from './useCases'
 import { es6Source, requireSource } from './testConstants'
 
 const nonSourceFiles = {
