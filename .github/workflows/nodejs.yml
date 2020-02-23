@@ -33,7 +33,8 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: yarn
-    - run: yarn test && codecov
+    - run: yarn test
+    - run: yarn test:cov
 
   build:
     runs-on: ubuntu-latest
