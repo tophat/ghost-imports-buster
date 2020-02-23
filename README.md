@@ -2,6 +2,9 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+[![codecov](https://codecov.io/gh/tophat/ghost-imports-buster/branch/master/graph/badge.svg)](https://codecov.io/gh/tophat/ghost-imports-buster)
+![Build](https://github.com/tophat/ghost-imports-buster/workflows/Node.js%20CI/badge.svg?branch=master)
+
 ###### :ghost: I ain't afraid of no ghost
 
 ---
