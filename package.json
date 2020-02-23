@@ -14,7 +14,7 @@
     "build": "tsc",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll --coverage",
-    "test:cov": "codecov",
+    "test:cov": "codecov -t $CODECOV_TOKEN",
     "lint": "eslint src/*.ts",
     "lint:fix": "eslint src/*.ts --fix",
     "clean:modules": "rimraf node_modules",
