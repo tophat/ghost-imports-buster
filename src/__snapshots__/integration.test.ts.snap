@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Integration scenarios No unused dependencies, Undeclared dependencies 1`] = `
+"[92mNo unused dependencies![39m
+[93mThe following dependencies are imported but not declared in [project_root][39m
+yeetsticks
+"
+`;
+
+exports[`Integration scenarios No unused dependencies, no undeclared dependencies 1`] = `
+"[92mNo unused dependencies![39m
+[92mNo undeclared dependencies![39m
+"
+`;
+
+exports[`Integration scenarios Unused dependencies, Undeclared dependencies 1`] = `
+"[93mThe following dependencies are declared in [project_root]/package.json but are not imported anywhere:[39m
+yeetsticks
+[93mThe following dependencies are imported but not declared in [project_root][39m
+doop
+"
+`;
+
+exports[`Integration scenarios Unused dependencies, no undeclared dependencies 1`] = `
+"[93mThe following dependencies are declared in [project_root]/package.json but are not imported anywhere:[39m
+yeetsticks
+nope
+[92mNo undeclared dependencies![39m
+"
+`;
