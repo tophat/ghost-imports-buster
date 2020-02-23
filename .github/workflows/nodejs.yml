@@ -32,8 +32,11 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - run: yarn
     - run: yarn test
+    - run: yarn codecov -t $CODECOV_TOKEN
 
   build:
     runs-on: ubuntu-latest
