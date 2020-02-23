@@ -36,7 +36,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     - run: yarn
     - run: yarn test
-    - run: yarn codecov -t $CODECOV_TOKEN
+    - run: yarn test:cov
 
   build:
     runs-on: ubuntu-latest
