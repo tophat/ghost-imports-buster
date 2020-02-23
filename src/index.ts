@@ -36,7 +36,7 @@ function validateDependencies(projectPath: string): void {
     else {
         console.log(
             chalk.yellowBright(
-                `The following dependencies are imported but not declared in ${projectPath}`,
+                `The following dependencies are imported but not declared in ${projectPath}:`,
             ),
         )
         undeclared.forEach((dep: string) => {

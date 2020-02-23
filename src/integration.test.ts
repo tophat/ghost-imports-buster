@@ -42,11 +42,14 @@ describe('Integration scenarios', () => {
     })
 
     function run(): string {
-        const out = execSync(`node ${libPath} validate ${projectPath}`, {
-            encoding: 'utf-8',
-            stdio: 'pipe',
-            cwd: joinPath(__dirname, '..'),
-        })
+        const out = execSync(
+            `FORCE_COLOR=0 node ${libPath} validate ${projectPath}`,
+            {
+                encoding: 'utf-8',
+                stdio: 'pipe',
+                cwd: joinPath(__dirname, '..'),
+            },
+        )
         return out.replace(new RegExp(projectPath, 'g'), '[project_root]')
     }
 
@@ -67,7 +70,9 @@ describe('Integration scenarios', () => {
 
         projectPath = setUpIntegrationProject(mockPackageFile, mockSource)
 
-        expect(run()).toMatchSnapshot()
+        const output = run()
+        expect(output).toContain('No unused dependencies!')
+        expect(output).toContain('No undeclared dependencies!')
     })
 
     it('Unused dependencies, no undeclared dependencies', () => {
@@ -89,8 +94,15 @@ describe('Integration scenarios', () => {
 
         projectPath = setUpIntegrationProject(mockPackageFile, mockSource)
 
-        expect(run()).toMatchSnapshot()
+        const output = run()
+        expect(output).toContain(
+            'The following dependencies are declared in [project_root]/package.json but are not imported anywhere:',
+        )
+        expect(output).toContain('yeetsticks')
+        expect(output).toContain('nope')
+        expect(output).toContain('No undeclared dependencies!')
     })
+
     it('No unused dependencies, Undeclared dependencies', () => {
         const mockPackageFile = {
             dependencies: {
@@ -109,7 +121,12 @@ describe('Integration scenarios', () => {
 
         projectPath = setUpIntegrationProject(mockPackageFile, mockSource)
 
-        expect(run()).toMatchSnapshot()
+        const output = run()
+
+        expect(output).toContain('No unused dependencies!')
+        expect(output).toContain(
+            'The following dependencies are imported but not declared in [project_root]:\nyeetsticks',
+        )
     })
     it('Unused dependencies, Undeclared dependencies', () => {
         const mockPackageFile = {
@@ -130,6 +147,12 @@ describe('Integration scenarios', () => {
 
         projectPath = setUpIntegrationProject(mockPackageFile, mockSource)
 
-        expect(run()).toMatchSnapshot()
+        const output = run()
+        expect(output).toContain(
+            'The following dependencies are declared in [project_root]/package.json but are not imported anywhere:\nyeetsticks',
+        )
+        expect(output).toContain(
+            'The following dependencies are imported but not declared in [project_root]:\ndoop',
+        )
     })
 })
