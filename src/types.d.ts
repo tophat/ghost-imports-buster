@@ -12,9 +12,9 @@ export interface PackageConfig {
 }
 
 export interface PackageDependencies {
-    dependencies: string[]
-    devDependencies: string[]
-    peerDependencies: string[]
+    dependencies?: string[]
+    devDependencies?: string[]
+    peerDependencies?: string[]
 }
 
 export interface DiffReport {
