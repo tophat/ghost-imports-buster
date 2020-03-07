@@ -9,13 +9,18 @@ import {
 import parseCliArgs from './cli'
 
 function validateDependencies(projectPath: string): void {
-    const declaredDependencies = extractDeclaredDependencies(projectPath)
+    const {
+        dependencies = [],
+        peerDependencies = [],
+    } = extractDeclaredDependencies(projectPath)
     const sourceFiles = discoverSourceFiles(projectPath)
     const importedDependencies = getImportsFromFiles(sourceFiles)
 
     const { left: unused, right: undeclared } = diffDependenciesLists(
-        declaredDependencies,
+        dependencies,
         importedDependencies,
+        (packageName: string): boolean =>
+            !peerDependencies.includes(packageName),
     )
 
     if (unused.length === 0)

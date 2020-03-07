@@ -1,18 +1,25 @@
 import { lstatSync, readFileSync, readdirSync } from 'fs'
 
-import { DiffReport } from './types.d'
+import { DiffReport, PackageDependencies } from './types.d'
 import { ES6_IMPORT_STATEMENT, REQUIRE_IMPORT_STATEMENT } from './constants'
-import { isValidSourceFile } from './helpers'
+import { isPartialMatch, isValidSourceFile } from './helpers'
 
-export function extractDeclaredDependencies(packagePath = '.'): string[] {
+export function extractDeclaredDependencies(
+    packagePath = '.',
+): PackageDependencies {
     try {
         const packageFile = readFileSync(`${packagePath}/package.json`, {
             encoding: 'utf-8',
         })
         const parsedPackageFile = JSON.parse(packageFile)
-        return Object.keys(parsedPackageFile.dependencies)
+        return {
+            dependencies: Object.keys(parsedPackageFile.dependencies || {}),
+            peerDependencies: Object.keys(
+                parsedPackageFile.peerDependencies || {},
+            ),
+        }
     } catch (e) {
-        return []
+        return { dependencies: [], peerDependencies: [] }
     }
 }
 
@@ -65,19 +72,19 @@ export function getImportsFromFiles(paths: string[]): string[] {
 }
 
 export function diffDependenciesLists(
-    left: string[],
-    right: string[],
+    leftSet: string[],
+    rightSet: string[],
     filter: Function = (): boolean => true,
 ): DiffReport {
-    const unionSet = new Set([...left, ...right])
+    const unionSet = new Set([...leftSet, ...rightSet])
     const reduceHandler = function(
         report: DiffReport,
         current: string,
     ): DiffReport {
         if (!filter(current)) return report
 
-        const inLeft = left.includes(current)
-        const inRight = right.includes(current)
+        const inLeft = leftSet.includes(current)
+        const inRight = rightSet.includes(current)
 
         if (inLeft && !inRight) report.left.push(current)
         if (inRight && !inLeft) report.right.push(current)
@@ -87,15 +94,29 @@ export function diffDependenciesLists(
     }
 
     const reportBase = { left: [], right: [], union: [] }
-    return Array.from(unionSet).reduce(reduceHandler, reportBase)
-}
+    const { left, right, union } = Array.from(unionSet).reduce(
+        reduceHandler,
+        reportBase,
+    )
 
-/*
-export function isBuiltIn(packageName: string): boolean {
-    try {
-        return !require.resolve(packageName).includes('node_modules')
-    } catch (e) {
-        console.log(e)
-        return false
+    const rightWithoutPartialMatches = right.filter(
+        (packageName: string): boolean => {
+            return !left.some((otherPackage: string): boolean =>
+                isPartialMatch(otherPackage, packageName),
+            )
+        },
+    )
+
+    const leftWithoutPartialMatches = left.filter(
+        (packageName: string): boolean => {
+            return !right.some((otherPackage: string): boolean =>
+                isPartialMatch(otherPackage, packageName),
+            )
+        },
+    )
+    return {
+        left: leftWithoutPartialMatches,
+        right: rightWithoutPartialMatches,
+        union,
     }
-}*/
+}
