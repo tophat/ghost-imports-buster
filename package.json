@@ -36,6 +36,7 @@
     "husky": "^3.0.9",
     "jest": "^24.9.0",
     "mock-fs": "^4.10.4",
+    "packwatch": "^1.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
     "ts-jest": "^24.1.0",
@@ -47,7 +48,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "yarn lint && yarn test"
+      "pre-commit": "yarn lint && yarn test && yarn packwatch"
     }
   }
 }
