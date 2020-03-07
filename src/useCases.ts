@@ -99,20 +99,18 @@ export function diffDependenciesLists(
         reportBase,
     )
 
-    // TODO: Review this, it's like O(2*N^2)
     const rightWithoutPartialMatches = right.filter(
         (packageName: string): boolean => {
-            return left.some((otherPackage: string): boolean =>
-                isPartialMatch(packageName, otherPackage),
+            return !left.some((otherPackage: string): boolean =>
+                isPartialMatch(otherPackage, packageName),
             )
         },
     )
 
     const leftWithoutPartialMatches = left.filter(
         (packageName: string): boolean => {
-            return rightWithoutPartialMatches.some(
-                (otherPackage: string): boolean =>
-                    isPartialMatch(packageName, otherPackage),
+            return !right.some((otherPackage: string): boolean =>
+                isPartialMatch(otherPackage, packageName),
             )
         },
     )

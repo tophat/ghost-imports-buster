@@ -65,12 +65,12 @@ describe('Use cases', () => {
     })
 
     describe('Dependencies list diffing', () => {
+        beforeEach(mockFS.restore)
         it('correctly diffs', () => {
             const left = ['yeet', 'dang', 'sticks']
             const right = ['yeet', 'yeetas']
 
             const diffReport = diffDependenciesLists(left, right)
-
             expect(diffReport.left).toEqual(['dang', 'sticks'])
             expect(diffReport.right).toEqual(['yeetas'])
             expect(diffReport.union).toEqual(['yeet'])
@@ -85,6 +85,17 @@ describe('Use cases', () => {
 
             expect(diffReport.left).toEqual(['dang', 'sticks'])
             expect(diffReport.right).toEqual([])
+            expect(diffReport.union).toEqual([])
+        })
+
+        it('filters out partial matches in either set', () => {
+            const left = ['yeet', 'yoot/get']
+            const right = ['yoot', 'yeet/put']
+
+            const diffReport = diffDependenciesLists(left, right)
+
+            expect(diffReport.left).toEqual(['yeet'])
+            expect(diffReport.right).toEqual(['yoot'])
             expect(diffReport.union).toEqual([])
         })
     })
@@ -119,7 +130,22 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies()
 
-            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
+            expect(extracted).toEqual({
+                dependencies: Object.keys(mockPackageJSON.dependencies),
+                peerDependencies: [],
+            })
+        })
+
+        it('uses defaults if there are no dependencies or peer dependencies', () => {
+            mockFS({
+                'package.json': '{}',
+            })
+
+            const extracted = extractDeclaredDependencies('.')
+            expect(extracted).toEqual({
+                dependencies: [],
+                peerDependencies: [],
+            })
         })
 
         it('works', () => {
@@ -136,7 +162,10 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies('.')
 
-            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
+            expect(extracted).toEqual({
+                dependencies: Object.keys(mockPackageJSON.dependencies),
+                peerDependencies: [],
+            })
         })
 
         it('errors', () => {
@@ -144,7 +173,10 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies('.')
 
-            expect(extracted).toEqual([])
+            expect(extracted).toEqual({
+                dependencies: [],
+                peerDependencies: [],
+            })
         })
     })
 })

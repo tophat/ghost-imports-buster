@@ -6,7 +6,7 @@ export function isValidSourceFile(path: string): boolean {
 }
 
 export function isPartialMatch(left: string, right: string): boolean {
-    const prefixPattern = new RegExp(`^${left}`)
+    const prefixPattern = new RegExp(`^${left}/`)
     return prefixPattern.test(right)
 }
 
