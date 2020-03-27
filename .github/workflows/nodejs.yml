@@ -6,16 +6,12 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [8.x, 10.x, 12.x]
-
     steps:
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 12
     - run: yarn
     - run: yarn lint
 
@@ -24,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [8.x, 10.x, 12.x]
+        node-version: [10.x, 12.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -42,10 +38,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [8.x, 10.x, 12.x]
     
     needs: [lint, test]
 
@@ -54,8 +46,25 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 12
     - run: yarn
     - run: yarn build
-
-
+  
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build, lint, test]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Node setup
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
+    - name: Prepare
+      run: yarn && yarn build
+    - name: Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: yarn semantic-release --dry-run
