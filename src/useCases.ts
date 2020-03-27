@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, readdirSync } from 'fs'
 
 import { DiffReport, PackageDependencies } from './types.d'
 import { ES6_IMPORT_STATEMENT, REQUIRE_IMPORT_STATEMENT } from './constants'
-import { isPartialMatch, isValidSourceFile } from './helpers'
+import { isValidSourceFile } from './helpers'
 
 export function extractDeclaredDependencies(
     packagePath = '.',
@@ -99,26 +99,9 @@ export function diffDependenciesLists(
         reportBase,
     )
 
-    // TODO: Review this, it's like O(2*N^2)
-    const rightWithoutPartialMatches = right.filter(
-        (packageName: string): boolean => {
-            return left.some((otherPackage: string): boolean =>
-                isPartialMatch(packageName, otherPackage),
-            )
-        },
-    )
-
-    const leftWithoutPartialMatches = left.filter(
-        (packageName: string): boolean => {
-            return rightWithoutPartialMatches.some(
-                (otherPackage: string): boolean =>
-                    isPartialMatch(packageName, otherPackage),
-            )
-        },
-    )
     return {
-        left: leftWithoutPartialMatches,
-        right: rightWithoutPartialMatches,
+        left,
+        right,
         union,
     }
 }

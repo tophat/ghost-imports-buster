@@ -8,6 +8,7 @@
   "files": [
     "lib"
   ],
+  "bin": "./lib/index.js",
   "scripts": {
     "install:clean": "yarn clean:modules && yarn",
     "prebuild": "yarn clean:lib",
