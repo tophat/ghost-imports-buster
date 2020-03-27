@@ -119,7 +119,10 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies()
 
-            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
+            expect(extracted).toEqual({
+                dependencies: Object.keys(mockPackageJSON.dependencies),
+                peerDependencies: [],
+            })
         })
 
         it('works', () => {
@@ -136,7 +139,10 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies('.')
 
-            expect(extracted).toEqual(Object.keys(mockPackageJSON.dependencies))
+            expect(extracted).toEqual({
+                dependencies: Object.keys(mockPackageJSON.dependencies),
+                peerDependencies: [],
+            })
         })
 
         it('errors', () => {
@@ -144,7 +150,10 @@ describe('Use cases', () => {
 
             const extracted = extractDeclaredDependencies('.')
 
-            expect(extracted).toEqual([])
+            expect(extracted).toEqual({
+                dependencies: [],
+                peerDependencies: [],
+            })
         })
     })
 })
