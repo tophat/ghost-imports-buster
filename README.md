@@ -19,11 +19,23 @@ Having these ghostly imports can cause a whole lot of issues, ranging from cases
 
 ## Installation
 
-_Coming soon._
+```
+yarn add ghost-imports-buster -D
+```
+
+or
+
+```
+npm add ghost-imports-buster --save-dev
+```
 
 ## Usage
 
-_Coming Soon._
+```
+yarn ghost-imports-buster validate <project root>
+```
+
+Note that the project root should coincide with the location of your project's `package.json` file.
 
 ## Contributing
 

@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "author": "Marc Cataford <marc.cataford@tophatmonocle.com>",
   "license": "MIT",
+  "bin": "./lib/index.js",
   "files": [
     "lib"
   ],
