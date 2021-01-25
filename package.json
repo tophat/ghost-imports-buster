@@ -40,7 +40,7 @@
     "packwatch": "^1.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "semantic-release": "^17.0.4",
+    "semantic-release": "^17.3.7",
     "ts-jest": "^24.1.0",
     "typescript": "^3.7.2"
   },
