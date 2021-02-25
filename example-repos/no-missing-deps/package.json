@@ -1,0 +1,6 @@
+{
+  "name": "no-missing-deps",
+  "dependencies": {
+    "pkg-1": "1.0.0"
+  }
+}

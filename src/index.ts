@@ -1,57 +1,48 @@
-#!/usr/bin/env node
-
 import chalk from 'chalk'
 
 import {
-    diffDependenciesLists,
-    discoverSourceFiles,
-    extractDeclaredDependencies,
-    getImportsFromFiles,
-} from './useCases'
-import parseCliArgs from './cli'
+    getContext,
+    getDependenciesByWorkspaceMap,
+    getImportsByWorkspaceMap,
+    getUndeclaredDependencies,
+    getUnusedDependencies,
+} from './utils'
 
-function validateDependencies(projectPath: string): void {
-    const {
-        dependencies = [],
-        peerDependencies = [],
-    } = extractDeclaredDependencies(projectPath)
-    const sourceFiles = discoverSourceFiles(projectPath)
-    const importedDependencies = getImportsFromFiles(sourceFiles)
-
-    const { left: unused, right: undeclared } = diffDependenciesLists(
-        dependencies,
-        importedDependencies,
-        (packageName: string): boolean =>
-            !peerDependencies.includes(packageName),
-    )
-
-    if (unused.length === 0)
-        console.log(chalk.greenBright`No unused dependencies!`)
-    else {
-        console.log(
-            chalk.yellowBright(
-                `The following dependencies are declared in ${projectPath}/package.json but are not imported anywhere:`,
-            ),
-        )
-        unused.forEach((dep: string) => {
-            console.log(dep)
-        })
-    }
-
-    if (undeclared.length === 0)
-        console.log(chalk.greenBright`No undeclared dependencies!`)
-    else {
-        console.log(
-            chalk.yellowBright(
-                `The following dependencies are imported but not declared in ${projectPath}:`,
-            ),
-        )
-        undeclared.forEach((dep: string) => {
-            console.log(dep)
-        })
-    }
+interface Arguments {
+    cwd?: string
 }
 
-const cliArgs = process.argv
-const runParams = parseCliArgs(cliArgs)
-validateDependencies(runParams[0])
+export default async function validateDependencies({
+    cwd,
+}: Arguments): Promise<void> {
+    const context = await getContext(cwd)
+    const dependenciesMap = await getDependenciesByWorkspaceMap(context)
+    const importsMap = await getImportsByWorkspaceMap(context)
+
+    const undeclaredDependenciesMap = new Map()
+    const unusedDependenciesMap = new Map()
+    for (const workspace of context.project.workspaces) {
+        const workspaceDependencies = dependenciesMap.get(workspace)
+        const workspaceImports = importsMap.get(workspace)
+
+        const undeclaredDependencies = getUndeclaredDependencies(
+            workspaceDependencies,
+            workspaceImports,
+        )
+        const unusedDependencies = getUnusedDependencies(
+            workspaceDependencies,
+            workspaceImports,
+        )
+
+        undeclaredDependenciesMap.set(workspace, undeclaredDependencies)
+        unusedDependenciesMap.set(workspace, unusedDependencies)
+    }
+
+    for (const workspace of context.project.workspaces) {
+        const undeclared = undeclaredDependenciesMap.get(workspace)
+
+        console.log(workspace.manifest.name.name)
+        if (!undeclared.size) console.log('➝ No undeclared dependencies')
+        else console.log([...undeclared].join('\n'))
+    }
+}

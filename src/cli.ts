@@ -1,4 +1,8 @@
+#!/usr/bin/env node
+
 import program from 'commander'
+
+import validateDependencies from '.'
 
 const parseCliArgs = (args: string[]): string[] => {
     let pathsToProcess: string[] = []
@@ -15,4 +19,6 @@ const parseCliArgs = (args: string[]): string[] => {
     return pathsToProcess
 }
 
-export default parseCliArgs
+//const cliArgs = process.argv
+//const runParams = parseCliArgs()
+validateDependencies({ cwd: process.argv[2] })

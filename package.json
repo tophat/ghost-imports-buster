@@ -38,6 +38,7 @@
     "codecov": "^3.6.5",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
+    "eslint-import-resolver-node": "^0.3.4",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-prettier": "^3.1.1",
@@ -50,6 +51,10 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
+    "@babel/parser": "^7.13.4",
+    "@babel/traverse": "^7.13.0",
+    "@yarnpkg/cli": "^2.4.0",
+    "@yarnpkg/core": "^2.4.0",
     "chalk": "^3.0.0",
     "commander": "^4.0.1"
   }
