@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Enforce the presence of all imported dependencies in your package configuration",
   "main": "lib/index.js",
-  "author": "Marc Cataford <marc.cataford@tophatmonocle.com>",
+  "author": "Top Hat Monocle Corp. <opensource@tophat.com>",
   "license": "MIT",
   "bin": "./lib/index.js",
   "files": [
@@ -12,7 +12,8 @@
   "scripts": {
     "install:clean": "yarn clean:modules && yarn",
     "prebuild": "yarn clean:lib",
-    "build": "tsc",
+    "build": "run babel --config-file ./babel.config.js src/ --out-dir lib/ --no-copy-ignored --extensions '.ts' --ignore 'src/**/*.test.ts'",
+    "build:watch": "run build --watch",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll --coverage",
     "test:cov": "codecov -t $CODECOV_TOKEN",
@@ -22,35 +23,34 @@
     "clean:lib": "rimraf lib/*"
   },
   "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.1",
+    "@babel/plugin-transform-runtime": "^7.13.7",
+    "@babel/preset-env": "^7.13.5",
+    "@babel/preset-typescript": "^7.13.0",
     "@tophat/eslint-config": "^0.3.1",
     "@types/jest": "^24.0.23",
     "@types/mock-fs": "^4.10.0",
     "@types/node": "^12.12.7",
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
+    "babel-jest": "^26.6.3",
     "codecov": "^3.6.5",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-prettier": "^3.1.1",
-    "husky": "^3.0.9",
     "jest": "^24.9.0",
     "mock-fs": "^4.10.4",
     "packwatch": "^1.0.0",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.0",
-    "semantic-release": "^17.0.4",
     "ts-jest": "^24.1.0",
     "typescript": "^3.7.2"
   },
   "dependencies": {
     "chalk": "^3.0.0",
     "commander": "^4.0.1"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint && yarn test && yarn packwatch"
-    }
   }
 }
