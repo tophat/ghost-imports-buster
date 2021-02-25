@@ -3,3 +3,11 @@ node_modules
 *.swp
 lib
 *.tgz
+
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/versions
+!.yarn/sdks
+.pnp.*
