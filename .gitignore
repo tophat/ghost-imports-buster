@@ -11,3 +11,7 @@ lib
 !.yarn/versions
 !.yarn/sdks
 .pnp.*
+
+# IDE
+.vim
+.vscode
