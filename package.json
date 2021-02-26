@@ -22,7 +22,8 @@
     "lint": "eslint src/*.ts",
     "lint:fix": "eslint src/*.ts --fix",
     "clean:modules": "rimraf node_modules",
-    "clean:lib": "rimraf lib/*"
+    "clean:lib": "rimraf lib/*",
+    "postinstall": "husky install"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.0",
@@ -48,7 +49,9 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^5.1.1",
     "jest": "^24.9.0",
+    "lint-staged": "^10.5.4",
     "mock-fs": "^4.10.4",
     "packwatch": "^1.0.0",
     "prettier": "^2.2.1",
@@ -62,5 +65,12 @@
     "@yarnpkg/core": "^2.4.0",
     "@yarnpkg/fslib": "^2.4.0",
     "yargs": "^16.2.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+        "yarn lint",
+        "yarn types",
+        "yarn test --findRelatedTests"
+    ]
   }
 }
