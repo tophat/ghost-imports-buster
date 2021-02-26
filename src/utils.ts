@@ -1,13 +1,18 @@
 import { join, resolve } from 'path'
 import { promises as fs, readdirSync, statSync } from 'fs'
 
-import { Configuration, Project, Workspace } from '@yarnpkg/core'
+import { Configuration, Ident, Project, Workspace } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
 import { PortablePath } from '@yarnpkg/fslib'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 
 import { BabelParserNode, Context, PackagesByWorkspaceMap } from './types'
+
+export function getStringifiedIdent(ident: Ident): string {
+    if (ident.scope) return `${ident.scope}/${ident.name}`
+    return ident.name
+}
 
 export async function getContext(cwd: string): Promise<Context> {
     const fullCwd = resolve(process.cwd(), cwd) as PortablePath
@@ -27,10 +32,7 @@ export async function getDependenciesByWorkspaceMap(
     for (const workspace of context.project.workspaces) {
         const dependencies = [...workspace.manifest.dependencies.values()].map(
             (dependency) => {
-                // TODO: Use ident?
-                if (dependency.scope)
-                    return `${dependency.scope}/${dependency.name}`
-                else return dependency.name
+                return getStringifiedIdent(dependency)
             },
         )
 
