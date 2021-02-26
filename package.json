@@ -69,7 +69,6 @@
   "lint-staged": {
     "*.ts": [
         "yarn lint",
-        "yarn types",
         "yarn test --findRelatedTests"
     ]
   }
