@@ -11,7 +11,7 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
-        node-version: 12
+        node-version: 14
     - run: yarn
     - run: yarn lint
 
@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x, 14.x]
 
     steps:
     - uses: actions/checkout@v2
@@ -46,7 +46,7 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
-        node-version: 12
+        node-version: 14
     - run: yarn
     - run: yarn build
   
@@ -60,7 +60,7 @@ jobs:
     - name: Node setup
       uses: actions/setup-node@v1
       with:
-        node-version: 12
+        node-version: 14
     - name: Prepare
       run: yarn && yarn build
     - name: Release
