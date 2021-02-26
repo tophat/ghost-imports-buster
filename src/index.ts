@@ -43,7 +43,7 @@ export default async function validateDependencies({
         unusedDependenciesMap.set(workspaceIdent, unusedDependencies)
     }
 
-    const workspaceIdents = new Set()
+    const workspaceIdents: Set<string> = new Set()
 
     for (const workspace of context.project.workspaces) {
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')

@@ -1,5 +1,6 @@
 import { join, resolve } from 'path'
 import { promises as fs, readdirSync, statSync } from 'fs'
+import Module from 'module'
 
 import { Configuration, Project, Workspace, structUtils } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
@@ -22,7 +23,7 @@ export function printReport(report: Report): void {
 
         console.log(`📦 ${workspaceIdent}`)
 
-        if (unused.size > 0) {
+        if (unused && unused.size > 0) {
             console.log(
                 chalk.yellow(
                     'Unused dependencies (declared but not imported anywhere)',
@@ -34,7 +35,7 @@ export function printReport(report: Report): void {
         } else {
             console.log(chalk.green('No unused dependencies!'))
         }
-        if (undeclared.size > 0) {
+        if (undeclared && undeclared.size > 0) {
             console.log(
                 chalk.red(
                     'Undeclared dependencies (imported but not declared in package.json)',
@@ -78,7 +79,7 @@ export function collectPaths(root: string): Set<string> {
     const rootStat = statSync(root)
 
     if (!rootStat.isDirectory()) {
-        return root.match(/\.js$/) ? new Set([root]) : new Set()
+        return root.match(/\.(j|t)sx?$/) ? new Set([root]) : new Set()
     }
 
     const directoryListing = readdirSync(root)
@@ -105,18 +106,29 @@ export async function collectImportsFromWorkspace(
 
     for (const path of workspacePaths) {
         const content = await fs.readFile(path, { encoding: 'utf8' })
-        const ast = parse(content, { sourceType: 'module' })
+        const ast = parse(content, {
+            plugins: ['typescript'],
+            sourceType: 'module',
+        })
 
         traverse(ast, {
             ImportDeclaration: function (path: BabelParserNode) {
                 const imported = path.node.source.value
-                if (!isRelativeImport(imported)) imports.add(imported)
+                if (
+                    !isRelativeImport(imported) &&
+                    !Module.builtinModules.includes(imported)
+                )
+                    imports.add(imported)
             },
             CallExpression: function (path: BabelParserNode) {
                 const callee = path.node.callee.name
                 const imported = path.node.arguments[0]?.value
-                if (callee === 'require' && !isRelativeImport(imported))
-                    imports.add(path.node.arguments.value)
+                if (
+                    callee === 'require' &&
+                    !isRelativeImport(imported) &&
+                    !Module.builtinModules.includes(imported)
+                )
+                    imports.add(imported)
             },
         })
     }
