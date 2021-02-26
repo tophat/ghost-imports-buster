@@ -14,3 +14,8 @@ export interface Arguments {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type BabelParserNode = any
+
+export interface Report {
+    unusedDependencies: Map<string, Set<string>>
+    undeclaredDependencies: Map<string, Set<string>>
+}

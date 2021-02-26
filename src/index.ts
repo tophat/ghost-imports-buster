@@ -7,12 +7,7 @@ import {
     getUndeclaredDependencies,
     getUnusedDependencies,
 } from './utils'
-import { Arguments } from './types'
-
-interface Report {
-    unusedDependencies: Map<string, Set<string>>
-    undeclaredDependencies: Map<string, Set<string>>
-}
+import { Arguments, Report } from './types'
 
 export default async function validateDependencies({
     cwd,
