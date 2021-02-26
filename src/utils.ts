@@ -3,13 +3,14 @@ import { promises as fs, readdirSync, statSync } from 'fs'
 
 import { Configuration, Project, Workspace } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
+import { PortablePath } from '@yarnpkg/fslib'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 
-import { Context, PackageByWorkspaceMap } from './types'
+import { BabelParserNode, Context, PackagesByWorkspaceMap } from './types'
 
-export async function getContext(cwd: string): Context {
-    const fullCwd = resolve(process.cwd(), cwd)
+export async function getContext(cwd: string): Promise<Context> {
+    const fullCwd = resolve(process.cwd(), cwd) as PortablePath
     const configuration = await Configuration.find(
         fullCwd,
         getPluginConfiguration(),
@@ -20,8 +21,8 @@ export async function getContext(cwd: string): Context {
 
 export async function getDependenciesByWorkspaceMap(
     context: Context,
-): Promise<PackageByWorkspaceMap> {
-    const dependenciesByWorkspace = new Map()
+): Promise<PackagesByWorkspaceMap> {
+    const dependenciesByWorkspace: PackagesByWorkspaceMap = new Map()
 
     for (const workspace of context.project.workspaces) {
         const dependencies = [...workspace.manifest.dependencies.values()].map(
@@ -42,14 +43,19 @@ export function collectPaths(root: string): Set<string> {
     const rootStat = statSync(root)
 
     if (!rootStat.isDirectory()) {
-        return root.match(/\.js$/) ? [root] : []
+        return root.match(/\.js$/) ? new Set([root]) : new Set()
     }
 
     const directoryListing = readdirSync(root)
 
-    return directoryListing.reduce((paths, current) => {
-        return [...paths, ...collectPaths(join(root, current))]
-    }, [])
+    const collectedPaths = directoryListing.reduce(
+        (paths: string[], current: string): string[] => {
+            return [...paths, ...collectPaths(join(root, current))]
+        },
+        [],
+    )
+
+    return new Set(collectedPaths)
 }
 export async function collectImportsFromWorkspace(
     workspace: Workspace,
@@ -57,28 +63,30 @@ export async function collectImportsFromWorkspace(
     const workspaceRoot = workspace.cwd
     const workspacePaths = collectPaths(workspaceRoot)
 
-    const imports = new Set()
+    const imports: Set<string> = new Set()
 
     for (const path of workspacePaths) {
         const content = await fs.readFile(path, { encoding: 'utf8' })
         const ast = parse(content, { sourceType: 'module' })
 
         traverse(ast, {
-            // TODO: Other types of import decl.
-            ImportDeclaration: function (path) {
+            // TODO: Other import types
+            ImportDeclaration: function (path: BabelParserNode) {
                 imports.add(path.node.source.value)
             },
         })
     }
+
+    // TODO: pnp to filter what is a package?
 
     return imports
 }
 
 export async function getImportsByWorkspaceMap(
     context: Context,
-): Promise<PackageByWorkspaceMap> {
+): Promise<PackagesByWorkspaceMap> {
     const workspaces = context.project.workspaces
-    const importsMap = new Map()
+    const importsMap: PackagesByWorkspaceMap = new Map()
 
     for (const workspace of workspaces) {
         const collectedImports = await collectImportsFromWorkspace(workspace)
@@ -91,7 +99,7 @@ export function getUndeclaredDependencies(
     dependencies: Set<string>,
     imports: Set<string>,
 ): Set<string> {
-    const undeclaredDependencies = new Set()
+    const undeclaredDependencies: Set<string> = new Set()
 
     for (const importedPackage of imports) {
         if (!dependencies.has(importedPackage))
@@ -105,7 +113,7 @@ export function getUnusedDependencies(
     dependencies: Set<string>,
     imports: Set<string>,
 ): Set<string> {
-    const unusedDependencies = new Set()
+    const unusedDependencies: Set<string> = new Set()
 
     for (const dependency of dependencies) {
         if (!imports.has(dependency)) unusedDependencies.add(dependency)

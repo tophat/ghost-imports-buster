@@ -1601,7 +1601,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__traverse@npm:*, @types/babel__traverse@npm:^7.0.6":
+"@types/babel__traverse@npm:*, @types/babel__traverse@npm:^7.0.6, @types/babel__traverse@npm:^7.11.0":
   version: 7.11.0
   resolution: "@types/babel__traverse@npm:7.11.0"
   dependencies:
@@ -4538,6 +4538,7 @@ fsevents@^1.2.7:
     "@babel/preset-typescript": ^7.13.0
     "@babel/traverse": ^7.13.0
     "@tophat/eslint-config": ^0.3.1
+    "@types/babel__traverse": ^7.11.0
     "@types/jest": ^24.0.23
     "@types/mock-fs": ^4.10.0
     "@types/node": ^12.12.7
@@ -4545,6 +4546,7 @@ fsevents@^1.2.7:
     "@typescript-eslint/parser": ^2.7.0
     "@yarnpkg/cli": ^2.4.0
     "@yarnpkg/core": ^2.4.0
+    "@yarnpkg/fslib": ^2.4.0
     "@yarnpkg/pnpify": ^2.4.0
     babel-jest: ^26.6.3
     chalk: ^3.0.0

@@ -31,6 +31,7 @@
     "@babel/preset-env": "^7.13.5",
     "@babel/preset-typescript": "^7.13.0",
     "@tophat/eslint-config": "^0.3.1",
+    "@types/babel__traverse": "^7.11.0",
     "@types/jest": "^24.0.23",
     "@types/mock-fs": "^4.10.0",
     "@types/node": "^12.12.7",
@@ -58,6 +59,7 @@
     "@babel/traverse": "^7.13.0",
     "@yarnpkg/cli": "^2.4.0",
     "@yarnpkg/core": "^2.4.0",
+    "@yarnpkg/fslib": "^2.4.0",
     "chalk": "^3.0.0",
     "commander": "^4.0.1"
   }

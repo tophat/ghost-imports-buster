@@ -7,3 +7,10 @@ export interface Context {
 }
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
+
+export interface Arguments {
+    cwd?: string
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type BabelParserNode = any
