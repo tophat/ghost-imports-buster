@@ -8,5 +8,5 @@ module.exports = {
         ],
         '@babel/preset-typescript',
     ],
-    plugins: ['@babel/plugin-proposal-optional-chaining'],
+    plugins: ["@babel/plugin-proposal-nullish-coalescing-operator", '@babel/plugin-proposal-optional-chaining'],
 }
