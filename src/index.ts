@@ -1,8 +1,9 @@
+import { structUtils } from '@yarnpkg/core'
+
 import {
     getContext,
     getDependenciesByWorkspaceMap,
     getImportsByWorkspaceMap,
-    getStringifiedIdent,
     getUndeclaredDependencies,
     getUnusedDependencies,
 } from './utils'
@@ -27,6 +28,9 @@ export default async function validateDependencies({
     for (const workspace of context.project.workspaces) {
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
 
+        const workspaceIdent = structUtils.stringifyIdent(
+            workspace.manifest.name,
+        )
         const workspaceDependencies =
             dependenciesMap.get(workspace) ?? new Set()
         const workspaceImports = importsMap.get(workspace) ?? new Set()
@@ -40,19 +44,13 @@ export default async function validateDependencies({
             workspaceImports,
         )
 
-        undeclaredDependenciesMap.set(
-            getStringifiedIdent(workspace.manifest.name),
-            undeclaredDependencies,
-        )
-        unusedDependenciesMap.set(
-            getStringifiedIdent(workspace.manifest.name),
-            unusedDependencies,
-        )
+        undeclaredDependenciesMap.set(workspaceIdent, undeclaredDependencies)
+        unusedDependenciesMap.set(workspaceIdent, unusedDependencies)
     }
 
     for (const workspace of context.project.workspaces) {
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
-        const ident = getStringifiedIdent(workspace.manifest.name)
+        const ident = structUtils.stringifyIdent(workspace.manifest.name)
         const undeclared = undeclaredDependenciesMap.get(ident)
 
         console.log(ident)
