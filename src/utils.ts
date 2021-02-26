@@ -60,19 +60,26 @@ export async function collectImportsFromWorkspace(
 
     const imports: Set<string> = new Set()
 
+    const isRelativeImport = (imported: string): boolean =>
+        imported.startsWith('.')
+
     for (const path of workspacePaths) {
         const content = await fs.readFile(path, { encoding: 'utf8' })
         const ast = parse(content, { sourceType: 'module' })
 
         traverse(ast, {
-            // TODO: Other import types
             ImportDeclaration: function (path: BabelParserNode) {
-                imports.add(path.node.source.value)
+                const imported = path.node.source.value
+                if (!isRelativeImport(imported)) imports.add(imported)
+            },
+            CallExpression: function (path: BabelParserNode) {
+                const callee = path.node.callee.name
+                const imported = path.node.arguments[0]?.value
+                if (callee === 'require' && !isRelativeImport(imported))
+                    imports.add(path.node.arguments.value)
             },
         })
     }
-
-    // TODO: pnp to filter what is a package?
 
     return imports
 }
