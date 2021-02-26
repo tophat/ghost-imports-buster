@@ -16,6 +16,7 @@ export interface Arguments {
 export type BabelParserNode = any
 
 export interface Report {
+    workspaces: Set<string>
     unusedDependencies: Map<string, Set<string>>
     undeclaredDependencies: Map<string, Set<string>>
 }

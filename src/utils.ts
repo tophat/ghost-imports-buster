@@ -6,8 +6,48 @@ import { getPluginConfiguration } from '@yarnpkg/cli'
 import { PortablePath } from '@yarnpkg/fslib'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
+import chalk from 'chalk'
 
-import { BabelParserNode, Context, PackagesByWorkspaceMap } from './types'
+import {
+    BabelParserNode,
+    Context,
+    PackagesByWorkspaceMap,
+    Report,
+} from './types'
+
+export function printReport(report: Report): void {
+    for (const workspaceIdent of report.workspaces) {
+        const unused = report.unusedDependencies.get(workspaceIdent)
+        const undeclared = report.undeclaredDependencies.get(workspaceIdent)
+
+        console.log(`📦 ${workspaceIdent}`)
+
+        if (unused.size > 0) {
+            console.log(
+                chalk.yellow(
+                    'Unused dependencies (declared but not imported anywhere)',
+                ),
+            )
+            unused.forEach((dependency) => {
+                console.log(`→ ${dependency}`)
+            })
+        } else {
+            console.log(chalk.green('No unused dependencies!'))
+        }
+        if (undeclared.size > 0) {
+            console.log(
+                chalk.red(
+                    'Undeclared dependencies (imported but not declared in package.json)',
+                ),
+            )
+            undeclared.forEach((dependency) => {
+                console.log(`→ ${dependency}`)
+            })
+        } else {
+            console.log(chalk.green('No undeclared dependencies!'))
+        }
+    }
+}
 
 export async function getContext(cwd: string): Promise<Context> {
     const fullCwd = resolve(process.cwd(), cwd) as PortablePath
@@ -61,7 +101,7 @@ export async function collectImportsFromWorkspace(
     const imports: Set<string> = new Set()
 
     const isRelativeImport = (imported: string): boolean =>
-        imported.startsWith('.')
+        imported?.startsWith('.')
 
     for (const path of workspacePaths) {
         const content = await fs.readFile(path, { encoding: 'utf8' })

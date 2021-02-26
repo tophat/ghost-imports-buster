@@ -43,17 +43,16 @@ export default async function validateDependencies({
         unusedDependenciesMap.set(workspaceIdent, unusedDependencies)
     }
 
+    const workspaceIdents = new Set()
+
     for (const workspace of context.project.workspaces) {
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
         const ident = structUtils.stringifyIdent(workspace.manifest.name)
-        const undeclared = undeclaredDependenciesMap.get(ident)
-
-        console.log(ident)
-        if (!undeclared.size) console.log('➝ No undeclared dependencies')
-        else console.log([...undeclared].join('\n'))
+        workspaceIdents.add(ident)
     }
 
     return {
+        workspaces: workspaceIdents,
         undeclaredDependencies: undeclaredDependenciesMap,
         unusedDependencies: unusedDependenciesMap,
     }
