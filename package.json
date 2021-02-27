@@ -10,6 +10,7 @@
     "lib"
   ],
   "scripts": {
+    "prepack": "rm -rf lib/* && run build",
     "install:clean": "yarn clean:modules && yarn",
     "prebuild": "yarn clean:lib",
     "build": "run babel --config-file ./babel.config.js src/ --out-dir lib/ --no-copy-ignored --extensions '.ts' --ignore 'src/**/*.test.ts'",
