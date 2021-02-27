@@ -6,10 +6,16 @@ export interface Context {
     cwd: string
 }
 
+export interface AnalysisConfiguration {
+    cwd: string
+    includes: Set<string>
+}
+
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 
 export interface Arguments {
     cwd?: string
+    includes?: string[]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,6 +1,7 @@
 import { structUtils } from '@yarnpkg/core'
 
 import {
+    getConfiguration,
     getContext,
     getDependenciesByWorkspaceMap,
     getImportsByWorkspaceMap,
@@ -9,14 +10,13 @@ import {
 } from './utils'
 import { Arguments, Report } from './types'
 
-export default async function validateDependencies({
-    cwd,
-}: Arguments): Promise<Report> {
-    if (!cwd) cwd = process.cwd()
-
-    const context = await getContext(cwd)
+export default async function validateDependencies(
+    args: Arguments,
+): Promise<Report> {
+    const configuration = getConfiguration(args)
+    const context = await getContext(configuration.cwd)
     const dependenciesMap = await getDependenciesByWorkspaceMap(context)
-    const importsMap = await getImportsByWorkspaceMap(context)
+    const importsMap = await getImportsByWorkspaceMap(context, configuration)
 
     const undeclaredDependenciesMap = new Map()
     const unusedDependenciesMap = new Map()

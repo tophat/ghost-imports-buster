@@ -8,13 +8,23 @@ import { PortablePath } from '@yarnpkg/fslib'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import chalk from 'chalk'
+import minimatch from 'minimatch'
 
 import {
+    AnalysisConfiguration,
+    Arguments,
     BabelParserNode,
     Context,
     PackagesByWorkspaceMap,
     Report,
 } from './types'
+
+export function getConfiguration(args: Arguments): AnalysisConfiguration {
+    return {
+        cwd: args.cwd ?? process.cwd(),
+        includes: new Set(args.includes ?? ['**/**']),
+    }
+}
 
 export function printReport(report: Report): void {
     for (const workspaceIdent of report.workspaces) {
@@ -75,18 +85,29 @@ export async function getDependenciesByWorkspaceMap(
 
     return dependenciesByWorkspace
 }
-export function collectPaths(root: string): Set<string> {
+export function collectPaths(
+    configuration: AnalysisConfiguration,
+    root: string,
+): Set<string> {
     const rootStat = statSync(root)
 
     if (!rootStat.isDirectory()) {
-        return root.match(/\.(j|t)sx?$/) ? new Set([root]) : new Set()
+        const isIncluded = [...configuration.includes].some((includedGlob) =>
+            minimatch(join(root), includedGlob),
+        )
+        return root.match(/\.(j|t)sx?$/) && isIncluded
+            ? new Set([root])
+            : new Set()
     }
 
     const directoryListing = readdirSync(root)
 
     const collectedPaths = directoryListing.reduce(
         (paths: string[], current: string): string[] => {
-            return [...paths, ...collectPaths(join(root, current))]
+            return [
+                ...paths,
+                ...collectPaths(configuration, join(root, current)),
+            ]
         },
         [],
     )
@@ -94,18 +115,19 @@ export function collectPaths(root: string): Set<string> {
     return new Set(collectedPaths)
 }
 export async function collectImportsFromWorkspace(
+    configuration: AnalysisConfiguration,
     workspace: Workspace,
 ): Promise<Set<string>> {
     const workspaceRoot = workspace.cwd
-    const workspacePaths = collectPaths(workspaceRoot)
+    const workspacePaths = collectPaths(configuration, workspaceRoot)
 
     const imports: Set<string> = new Set()
 
     const isRelativeImport = (imported: string): boolean =>
         imported?.startsWith('.')
 
-    for (const path of workspacePaths) {
-        const content = await fs.readFile(path, { encoding: 'utf8' })
+    for (const filePath of workspacePaths) {
+        const content = await fs.readFile(filePath, { encoding: 'utf8' })
         const ast = parse(content, {
             plugins: ['typescript'],
             sourceType: 'module',
@@ -122,13 +144,16 @@ export async function collectImportsFromWorkspace(
             },
             CallExpression: function (path: BabelParserNode) {
                 const callee = path.node.callee.name
+                const argumentType = path.node.arguments[0]?.type
                 const imported = path.node.arguments[0]?.value
                 if (
                     callee === 'require' &&
+                    argumentType === 'StringLiteral' &&
                     !isRelativeImport(imported) &&
                     !Module.builtinModules.includes(imported)
-                )
+                ) {
                     imports.add(imported)
+                }
             },
         })
     }
@@ -138,12 +163,16 @@ export async function collectImportsFromWorkspace(
 
 export async function getImportsByWorkspaceMap(
     context: Context,
+    configuration: AnalysisConfiguration,
 ): Promise<PackagesByWorkspaceMap> {
     const workspaces = context.project.workspaces
     const importsMap: PackagesByWorkspaceMap = new Map()
 
     for (const workspace of workspaces) {
-        const collectedImports = await collectImportsFromWorkspace(workspace)
+        const collectedImports = await collectImportsFromWorkspace(
+            configuration,
+            workspace,
+        )
         importsMap.set(workspace, collectedImports)
     }
     return importsMap
