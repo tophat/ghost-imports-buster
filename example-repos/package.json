@@ -1,8 +1,0 @@
-{
-  "name": "example-repos",
-  "private": true,
-  "workspaces": [
-      "no-missing-deps",
-      "missing_deps"
-  ]
-}
