@@ -4673,11 +4673,10 @@ fsevents@^1.2.7:
     mock-fs: ^4.10.4
     packwatch: ^1.0.0
     prettier: ^2.2.1
-    rimraf: ^3.0.0
     typescript: ^3.7.2
     yargs: ^16.2.0
   bin:
-    ghost-imports-buster: ./lib/index.js
+    ghost-imports-buster: ./lib/cli.js
   languageName: unknown
   linkType: soft
 
@@ -7969,7 +7968,7 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
-"rimraf@npm:^3.0.0, rimraf@npm:^3.0.2":
+"rimraf@npm:^3.0.2":
   version: 3.0.2
   resolution: "rimraf@npm:3.0.2"
   dependencies:

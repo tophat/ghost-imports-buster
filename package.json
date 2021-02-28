@@ -5,15 +5,14 @@
   "main": "lib/index.js",
   "author": "Top Hat Monocle Corp. <opensource@tophat.com>",
   "license": "MIT",
-  "bin": "./lib/index.js",
+  "bin": "./lib/cli.js",
   "files": [
     "lib"
   ],
   "scripts": {
     "prepack": "rm -rf lib/* && run build",
-    "install:clean": "yarn clean:modules && yarn",
-    "prebuild": "yarn clean:lib",
-    "build": "run babel --config-file ./babel.config.js src/ --out-dir lib/ --no-copy-ignored --extensions '.ts' --ignore 'src/**/*.test.ts'",
+    "prebuild": "rm -rf lib/*",
+    "build": "run babel --config-file ./babel.config.js src/ --out-dir lib/ --no-copy-ignored --extensions '.ts' --ignore 'src/**/*.test.ts' --ignore 'src/**/testUtils.ts'",
     "build:watch": "run build --watch",
     "types": "tsc",
     "types:watch": "run types --watch",
@@ -21,10 +20,7 @@
     "test:watch": "jest --watchAll --coverage",
     "test:cov": "codecov -t $CODECOV_TOKEN",
     "lint": "eslint src/*.ts",
-    "lint:fix": "eslint src/*.ts --fix",
-    "clean:modules": "rimraf node_modules",
-    "clean:lib": "rimraf lib/*",
-    "postinstall": "husky install"
+    "lint:fix": "eslint src/*.ts --fix"
   },
   "devDependencies": {
     "@babel/cli": "^7.13.0",
@@ -57,7 +53,6 @@
     "mock-fs": "^4.10.4",
     "packwatch": "^1.0.0",
     "prettier": "^2.2.1",
-    "rimraf": "^3.0.0",
     "typescript": "^3.7.2"
   },
   "dependencies": {
