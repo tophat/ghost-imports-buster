@@ -8,7 +8,8 @@ module.exports = {
         "prettier"
     ],
     rules: {
-        '@typescript-eslint/member-delimiter-style': 0
+        '@typescript-eslint/member-delimiter-style': 0,
+        '@typescript-eslint/no-use-before-define': ["error", { functions: false }]
     },
     settings: {
         "import/resolver": {
