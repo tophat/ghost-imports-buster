@@ -7,7 +7,6 @@ export interface Context {
 }
 
 export interface AnalysisConfiguration {
-    cwd: string
     includes: Set<string>
 }
 
@@ -16,6 +15,11 @@ export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 export interface Arguments {
     cwd?: string
     includes?: string[]
+}
+
+export interface DiffReport {
+    undeclared: Map<string, Set<string>>
+    unused: Map<string, Set<string>>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

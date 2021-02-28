@@ -15,14 +15,61 @@ import {
     Arguments,
     BabelParserNode,
     Context,
+    DiffReport,
     PackagesByWorkspaceMap,
     Report,
 } from './types'
 
 export function getConfiguration(args: Arguments): AnalysisConfiguration {
     return {
-        cwd: args.cwd ?? process.cwd(),
         includes: new Set(args.includes ?? ['**/**']),
+    }
+}
+
+export async function getContext(cwd?: string): Promise<Context> {
+    const fullCwd = resolve(process.cwd(), cwd ?? '') as PortablePath
+    const configuration = await Configuration.find(
+        fullCwd,
+        getPluginConfiguration(),
+    )
+    const { project } = await Project.find(configuration, fullCwd)
+    return { configuration, project, cwd: fullCwd }
+}
+
+export function diffDependenciesAndImportsByWorkspace(
+    context: Context,
+    dependenciesMap: PackagesByWorkspaceMap,
+    importsMap: PackagesByWorkspaceMap,
+): DiffReport {
+    const { workspaces } = context.project
+    const undeclaredDependenciesMap = new Map()
+    const unusedDependenciesMap = new Map()
+    for (const workspace of workspaces) {
+        if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
+
+        const workspaceIdent = structUtils.stringifyIdent(
+            workspace.manifest.name,
+        )
+        const workspaceDependencies =
+            dependenciesMap.get(workspace) ?? new Set()
+        const workspaceImports = importsMap.get(workspace) ?? new Set()
+
+        const undeclaredDependencies = getUndeclaredDependencies(
+            workspaceDependencies,
+            workspaceImports,
+        )
+        const unusedDependencies = getUnusedDependencies(
+            workspaceDependencies,
+            workspaceImports,
+        )
+
+        undeclaredDependenciesMap.set(workspaceIdent, undeclaredDependencies)
+        unusedDependenciesMap.set(workspaceIdent, unusedDependencies)
+    }
+
+    return {
+        undeclared: undeclaredDependenciesMap,
+        unused: unusedDependenciesMap,
     }
 }
 
@@ -58,16 +105,6 @@ export function printReport(report: Report): void {
             console.log(chalk.green('No undeclared dependencies!'))
         }
     }
-}
-
-export async function getContext(cwd: string): Promise<Context> {
-    const fullCwd = resolve(process.cwd(), cwd) as PortablePath
-    const configuration = await Configuration.find(
-        fullCwd,
-        getPluginConfiguration(),
-    )
-    const { project } = await Project.find(configuration, fullCwd)
-    return { configuration, project, cwd: fullCwd }
 }
 
 export async function getDependenciesByWorkspaceMap(
@@ -178,7 +215,7 @@ export async function getImportsByWorkspaceMap(
     return importsMap
 }
 
-export function getUndeclaredDependencies(
+function getUndeclaredDependencies(
     dependencies: Set<string>,
     imports: Set<string>,
 ): Set<string> {
@@ -192,7 +229,7 @@ export function getUndeclaredDependencies(
     return undeclaredDependencies
 }
 
-export function getUnusedDependencies(
+function getUnusedDependencies(
     dependencies: Set<string>,
     imports: Set<string>,
 ): Set<string> {
