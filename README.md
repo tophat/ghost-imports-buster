@@ -9,13 +9,11 @@
 
 ---
 
-## Motivation
+## A tale of well-defined dependencies
 
-Because of [how NodeJS import resolution functions](https://nodejs.org/api/modules.html#modules_all_together), it is possible for packages that are not part of your project's `package.json` to the resolved by `import` and `require` statements in your code. This obviously isn't ideal because these "ghost dependencies" operate outside of the contract between your project's dependencies and whatever system installs and runs it.
+Because of [how NodeJS import resolution works](https://nodejs.org/api/modules.html#modules_all_together), it is possible for packages that are not part of your project's `package.json` to be resolved by `import` and `require` statements in your code. This creates a "works on machine" scenario where your code depends on packages installed outside of their respective projects, causing failures for whoever consumes your packages and does not have the same global installs. 
 
-Having these ghostly imports can cause a whole lot of issues, ranging from cases of "it works on my machine!" to static analysis tools failing to detect circular imports between groups of packages (if your project is a monorepo). Of course, best practices dictate that anything imported that isn't a core package should be listed in `package.json`, but sometimes best practices are overlooked and messes happen. This is where `ghost-imports-buster` comes in.
-
-`ghost-imports-buster` compiles a list of your peer, development and production dependencies (based on `package.json`) and then traverses your package's source code to get an equivalent list of anything that is imported. It then diffs those two lists (with some exclusions, because relative/absolute file imports and core packages don't need policing) to verify that any third-party library that is used in your application code is accounted for in the package configuration.
+With the `ghost-imports-buster` dependency validator, you can monitor dependencies declared in your `package.json` files and compare them against what is actually imported in your code. It then becomes easy to find and eliminate extraneous dependencies (which are declared, but not used anywhere) and fix ghost dependencies (which are not declared, but imported in code).
 
 ## Installation
 
@@ -23,19 +21,20 @@ Having these ghostly imports can cause a whole lot of issues, ranging from cases
 yarn add ghost-imports-buster -D
 ```
 
-or
-
-```
-npm add ghost-imports-buster --save-dev
-```
-
 ## Usage
 
 ```
-yarn ghost-imports-buster validate <project root>
+yarn ghost-imports-buster [--cwd <cwd>] [--include <inclusion glob>]
 ```
 
-Note that the project root should coincide with the location of your project's `package.json` file.
+## Configuration
+
+You can pass in parameters to the ghost import call to customize the analysis:
+
+|Parameter|Type|Description|
+|---|---|---|
+|`cdw`|`string`|Directory root to execute the validation from, defaults to `.`|
+|`include`|`string`|Glob to filter files to include when looking for imports, can be used multiple times to define multiple globs. Defaults to `**/*`|
 
 ## Contributing
 
