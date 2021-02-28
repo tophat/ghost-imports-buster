@@ -1,12 +1,9 @@
 import { structUtils } from '@yarnpkg/core'
 
-import {
-    diffDependenciesAndImportsByWorkspace,
-    getConfiguration,
-    getContext,
-    getDependenciesByWorkspaceMap,
-    getImportsByWorkspaceMap,
-} from './utils'
+import { getConfiguration, getContext } from './utils'
+import getImportsByWorkspaceMap from './getImportsFromWorkspaceMap'
+import diffDependenciesAndImportsByWorkspace from './diffDependenciesAndImportsByWorkspace'
+import getDependenciesByWorkspaceMap from './getDependenciesByWorkspaceMap'
 import { Arguments, Report } from './types'
 
 export default async function validateDependencies(

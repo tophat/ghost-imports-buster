@@ -2,7 +2,7 @@
 
 import yargs from 'yargs'
 
-import { printReport } from './utils'
+import printReport from './printReport'
 
 import validateDependencies from '.'
 
