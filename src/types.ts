@@ -8,10 +8,12 @@ export interface Context {
 
 export interface PartialAnalysisConfiguration {
     include?: Set<string>
+    exclude?: Set<string>
 }
 
 export interface AnalysisConfiguration {
     include: Set<string>
+    exclude: Set<string>
 }
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
@@ -19,6 +21,7 @@ export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 export interface Arguments {
     cwd?: string
     include?: string[]
+    exclude?: string[]
 }
 
 export interface DiffReport {

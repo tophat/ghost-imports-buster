@@ -23,8 +23,12 @@ export async function getConfiguration(
     const includesFromArgs = args.include ?? []
     const mergedIncludes = [...includesFromFile, ...includesFromArgs]
 
+    const excludesFromFile = configurationFromFile.exclude ?? []
+    const excludesFromArgs = args.exclude ?? []
+
     return {
         include: new Set(mergedIncludes.length ? mergedIncludes : ['**/**']),
+        exclude: new Set([...excludesFromFile, ...excludesFromArgs]),
     }
 }
 
