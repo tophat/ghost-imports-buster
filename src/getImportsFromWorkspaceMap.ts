@@ -85,7 +85,7 @@ function collectPaths(
     const rootStat = statSync(root)
 
     if (!rootStat.isDirectory()) {
-        const isIncluded = [...configuration.includes].some((includedGlob) =>
+        const isIncluded = [...configuration.include].some((includedGlob) =>
             minimatch(join(root), includedGlob),
         )
         return root.match(/\.(j|t)sx?$/) && isIncluded

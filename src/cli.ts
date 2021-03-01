@@ -12,12 +12,12 @@ const argv = yargs(process.argv.slice(2))
         type: 'string',
         description: 'Project root',
     })
-    .option('includes', {
+    .option('include', {
         type: 'array',
-        description: 'Paths to includes in the analysis',
+        description: 'Paths to include in the analysis',
     }).argv
 
-validateDependencies({ cwd: argv.cwd, includes: argv.includes as string[] })
+validateDependencies({ cwd: argv.cwd, include: argv.include as string[] })
     .catch((e) => {
         console.log(e)
         process.exit(1)

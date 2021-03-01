@@ -6,15 +6,19 @@ export interface Context {
     cwd: string
 }
 
+export interface PartialAnalysisConfiguration {
+    include?: Set<string>
+}
+
 export interface AnalysisConfiguration {
-    includes: Set<string>
+    include: Set<string>
 }
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 
 export interface Arguments {
     cwd?: string
-    includes?: string[]
+    include?: string[]
 }
 
 export interface DiffReport {

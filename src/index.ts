@@ -10,7 +10,7 @@ export default async function validateDependencies(
     args: Arguments,
 ): Promise<Report> {
     // Get context and configuration.
-    const configuration = getConfiguration(args)
+    const configuration = await getConfiguration(args)
     const context = await getContext(args.cwd)
 
     // Build dependencies and import map for all workspaces
