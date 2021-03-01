@@ -35,5 +35,5 @@
     /* Advanced Options */
     "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
   },
-  "exclude": ["src/*.test.ts", "src/testUtils.ts"]
+  "exclude": ["tests/**/*.ts"]
 }
