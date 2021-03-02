@@ -35,6 +35,8 @@ You can pass in parameters to the ghost import call to customize the analysis:
 |---|---|---|
 |`cdw`|`string`|Directory root to execute the validation from, defaults to `.`|
 |`include`|`string`|Glob to filter files to include when looking for imports, can be used multiple times to define multiple globs. Defaults to `**/*`|
+|`exclude`|`string`|Glob to filter files to exclude when looking for imports. Same usage as `include`|
+|`fix`|`boolean`|When set, unused dependencies are removed and undeclared ones, added. This adds `latest` if available.|
 
 ## Contributing
 

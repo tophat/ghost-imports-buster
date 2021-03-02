@@ -14,6 +14,7 @@ export interface PartialAnalysisConfiguration {
 export interface AnalysisConfiguration {
     include: Set<string>
     exclude: Set<string>
+    fix: boolean
 }
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
@@ -22,6 +23,7 @@ export interface Arguments {
     cwd?: string
     include?: string[]
     exclude?: string[]
+    fix?: boolean
 }
 
 export interface DiffReport {

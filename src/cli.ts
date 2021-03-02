@@ -2,8 +2,6 @@
 
 import yargs from 'yargs'
 
-import printReport from './printReport'
-
 import validateDependencies from '.'
 
 const argv = yargs(process.argv.slice(2))
@@ -19,15 +17,18 @@ const argv = yargs(process.argv.slice(2))
     .option('exclude', {
         type: 'array',
         description: 'Paths to exclude from the analysis',
+    })
+    .option('fix', {
+        type: 'boolean',
+        description: 'Attempt to fix package.json based on analysis',
     }).argv
 
 validateDependencies({
     cwd: argv.cwd,
     include: argv.include as string[],
     exclude: argv.exclude as string[],
+    fix: argv.fix,
+}).catch((e) => {
+    console.log(e)
+    process.exit(1)
 })
-    .catch((e) => {
-        console.log(e)
-        process.exit(1)
-    })
-    .then(printReport)

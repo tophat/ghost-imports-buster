@@ -29,6 +29,7 @@ export async function getConfiguration(
     return {
         include: new Set(mergedIncludes.length ? mergedIncludes : ['**/**']),
         exclude: new Set([...excludesFromFile, ...excludesFromArgs]),
+        fix: args.fix ?? false,
     }
 }
 

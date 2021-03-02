@@ -5,6 +5,8 @@ import getImportsByWorkspaceMap from './getImportsFromWorkspaceMap'
 import diffDependenciesAndImportsByWorkspace from './diffDependenciesAndImportsByWorkspace'
 import getDependenciesByWorkspaceMap from './getDependenciesByWorkspaceMap'
 import { Arguments, Report } from './types'
+import fixWorkspaces from './fixWorkspaces'
+import printReport from './printReport'
 
 export default async function validateDependencies(
     args: Arguments,
@@ -32,9 +34,14 @@ export default async function validateDependencies(
         workspaceIdents.add(ident)
     }
 
-    return {
+    const report = {
         workspaces: workspaceIdents,
         undeclaredDependencies: diffReport.undeclared,
         unusedDependencies: diffReport.unused,
     }
+
+    printReport(report)
+    if (configuration.fix) await fixWorkspaces(context, diffReport)
+
+    return report
 }
