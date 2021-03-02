@@ -1,6 +1,6 @@
 # Ghost Imports Buster
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 [![codecov](https://codecov.io/gh/tophat/ghost-imports-buster/branch/master/graph/badge.svg)](https://codecov.io/gh/tophat/ghost-imports-buster)
 ![Build](https://github.com/tophat/ghost-imports-buster/workflows/Node.js%20CI/badge.svg?branch=master)
@@ -52,6 +52,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://mcataford.github.io"><img src="https://avatars2.githubusercontent.com/u/6210361?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Marc Cataford</b></sub></a><br /><a href="#ideas-mcataford" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/tophat/ghost-imports-buster/commits?author=mcataford" title="Code">💻</a> <a href="https://github.com/tophat/ghost-imports-buster/commits?author=mcataford" title="Tests">⚠️</a> <a href="https://github.com/tophat/ghost-imports-buster/commits?author=mcataford" title="Documentation">📖</a> <a href="#infra-mcataford" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
     <td align="center"><a href="https://opensource.tophat.com"><img src="https://avatars.githubusercontent.com/u/6020693?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Shouvik DCosta</b></sub></a><br /><a href="#infra-sdcosta" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    <td align="center"><a href="https://noahnu.com"><img src="https://avatars.githubusercontent.com/u/1297096?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Noah</b></sub></a><br /><a href="https://github.com/tophat/ghost-imports-buster/commits?author=noahnu" title="Code">💻</a></td>
   </tr>
 </table>
 
