@@ -1,57 +1,47 @@
-#!/usr/bin/env node
+import { structUtils } from '@yarnpkg/core'
 
-import chalk from 'chalk'
+import { getConfiguration, getContext } from './utils'
+import getImportsByWorkspaceMap from './getImportsFromWorkspaceMap'
+import diffDependenciesAndImportsByWorkspace from './diffDependenciesAndImportsByWorkspace'
+import getDependenciesByWorkspaceMap from './getDependenciesByWorkspaceMap'
+import { Arguments, Report } from './types'
+import fixWorkspaces from './fixWorkspaces'
+import printReport from './printReport'
 
-import {
-    diffDependenciesLists,
-    discoverSourceFiles,
-    extractDeclaredDependencies,
-    getImportsFromFiles,
-} from './useCases'
-import parseCliArgs from './cli'
+export default async function validateDependencies(
+    args: Arguments,
+): Promise<Report> {
+    // Get context and configuration.
+    const configuration = await getConfiguration(args)
+    const context = await getContext(args.cwd)
 
-function validateDependencies(projectPath: string): void {
-    const {
-        dependencies = [],
-        peerDependencies = [],
-    } = extractDeclaredDependencies(projectPath)
-    const sourceFiles = discoverSourceFiles(projectPath)
-    const importedDependencies = getImportsFromFiles(sourceFiles)
+    // Build dependencies and import map for all workspaces
+    const dependenciesMap = await getDependenciesByWorkspaceMap(context)
+    const importsMap = await getImportsByWorkspaceMap(context, configuration)
 
-    const { left: unused, right: undeclared } = diffDependenciesLists(
-        dependencies,
-        importedDependencies,
-        (packageName: string): boolean =>
-            !peerDependencies.includes(packageName),
+    // Diff dependencies and imports by workspace
+    const diffReport = diffDependenciesAndImportsByWorkspace(
+        context,
+        dependenciesMap,
+        importsMap,
     )
 
-    if (unused.length === 0)
-        console.log(chalk.greenBright`No unused dependencies!`)
-    else {
-        console.log(
-            chalk.yellowBright(
-                `The following dependencies are declared in ${projectPath}/package.json but are not imported anywhere:`,
-            ),
-        )
-        unused.forEach((dep: string) => {
-            console.log(dep)
-        })
+    const workspaceIdents: Set<string> = new Set()
+
+    for (const workspace of context.project.workspaces) {
+        if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
+        const ident = structUtils.stringifyIdent(workspace.manifest.name)
+        workspaceIdents.add(ident)
     }
 
-    if (undeclared.length === 0)
-        console.log(chalk.greenBright`No undeclared dependencies!`)
-    else {
-        console.log(
-            chalk.yellowBright(
-                `The following dependencies are imported but not declared in ${projectPath}:`,
-            ),
-        )
-        undeclared.forEach((dep: string) => {
-            console.log(dep)
-        })
+    const report = {
+        workspaces: workspaceIdents,
+        undeclaredDependencies: diffReport.undeclared,
+        unusedDependencies: diffReport.unused,
     }
+
+    printReport(report)
+    if (configuration.fix) await fixWorkspaces(context, diffReport)
+
+    return report
 }
-
-const cliArgs = process.argv
-const runParams = parseCliArgs(cliArgs)
-validateDependencies(runParams[0])

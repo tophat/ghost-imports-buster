@@ -3,3 +3,15 @@ node_modules
 *.swp
 lib
 *.tgz
+*.sw*
+# Yarn
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/versions
+!.yarn/sdks
+.pnp.*
+
+# IDE
+.vim
+.vscode

@@ -1,18 +1,34 @@
-import program from 'commander'
+#!/usr/bin/env node
 
-const parseCliArgs = (args: string[]): string[] => {
-    let pathsToProcess: string[] = []
+import yargs from 'yargs'
 
-    program
-        .command('validate <target> [otherTargets...]')
-        .option('-e', '--throwOnFail', 'Throws an error on failure.')
-        .action((target: string, otherTargets: string[]) => {
-            pathsToProcess = otherTargets ? [target, ...otherTargets] : [target]
-        })
+import validateDependencies from '.'
 
-    program.parse(args)
+const argv = yargs(process.argv.slice(2))
+    .usage('ghostimports [projectRootPath]')
+    .option('cwd', {
+        type: 'string',
+        description: 'Project root',
+    })
+    .option('include', {
+        type: 'array',
+        description: 'Paths to include in the analysis',
+    })
+    .option('exclude', {
+        type: 'array',
+        description: 'Paths to exclude from the analysis',
+    })
+    .option('fix', {
+        type: 'boolean',
+        description: 'Attempt to fix package.json based on analysis',
+    }).argv
 
-    return pathsToProcess
-}
-
-export default parseCliArgs
+validateDependencies({
+    cwd: argv.cwd,
+    include: argv.include as string[],
+    exclude: argv.exclude as string[],
+    fix: argv.fix,
+}).catch((e) => {
+    console.log(e)
+    process.exit(1)
+})

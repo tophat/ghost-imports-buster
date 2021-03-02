@@ -3,54 +3,74 @@
   "version": "0.0.0",
   "description": "Enforce the presence of all imported dependencies in your package configuration",
   "main": "lib/index.js",
-  "author": "Marc Cataford <marc.cataford@tophatmonocle.com>",
+  "author": "Top Hat Monocle Corp. <opensource@tophat.com>",
   "license": "MIT",
-  "bin": "./lib/index.js",
+  "bin": "./lib/cli.js",
   "files": [
     "lib"
   ],
   "scripts": {
-    "install:clean": "yarn clean:modules && yarn",
-    "prebuild": "yarn clean:lib",
-    "build": "tsc",
+    "prepack": "rm -rf lib/* && run build",
+    "prebuild": "rm -rf lib/*",
+    "build": "run babel --config-file ./babel.config.js src/ --out-dir lib/ --no-copy-ignored --extensions '.ts'",
+    "build:watch": "run build --watch",
+    "types": "tsc",
+    "types:watch": "run types --watch",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll --coverage",
     "test:cov": "codecov -t $CODECOV_TOKEN",
-    "lint": "eslint src/*.ts",
-    "lint:fix": "eslint src/*.ts --fix",
-    "clean:modules": "rimraf node_modules",
-    "clean:lib": "rimraf lib/*"
+    "lint": "eslint src/*.ts tests/*.ts *.js",
+    "lint:fix": "run lint --fix"
   },
   "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.1",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.13.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.13.0",
+    "@babel/plugin-transform-runtime": "^7.13.7",
+    "@babel/preset-env": "^7.13.5",
+    "@babel/preset-typescript": "^7.13.0",
     "@tophat/eslint-config": "^0.3.1",
+    "@types/babel__traverse": "^7.11.0",
     "@types/jest": "^24.0.23",
-    "@types/mock-fs": "^4.10.0",
+    "@types/minimatch": "^3.0.3",
     "@types/node": "^12.12.7",
+    "@types/yargs": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
+    "@yarnpkg/pnpify": "^2.4.0",
+    "babel-jest": "^26.6.3",
     "codecov": "^3.6.5",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
+    "eslint-import-resolver-node": "^0.3.4",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jest": "^23.0.4",
     "eslint-plugin-prettier": "^3.1.1",
-    "husky": "^3.0.9",
+    "husky": "^5.1.1",
     "jest": "^24.9.0",
+    "lint-staged": "^10.5.4",
     "mock-fs": "^4.10.4",
     "packwatch": "^1.0.0",
-    "prettier": "^1.19.1",
-    "rimraf": "^3.0.0",
-    "semantic-release": "^17.0.4",
-    "ts-jest": "^24.1.0",
+    "prettier": "^2.2.1",
     "typescript": "^3.7.2"
   },
   "dependencies": {
-    "chalk": "^3.0.0",
-    "commander": "^4.0.1"
+    "@babel/parser": "^7.13.4",
+    "@babel/traverse": "^7.13.0",
+    "@yarnpkg/cli": "^2.4.0",
+    "@yarnpkg/core": "^2.4.0",
+    "@yarnpkg/fslib": "^2.4.0",
+    "@yarnpkg/plugin-npm": "^2.4.0",
+    "@yarnpkg/plugin-pack": "^2.2.3",
+    "chalk": "^4.1.0",
+    "minimatch": "^3.0.4",
+    "yargs": "^16.2.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint && yarn test && yarn packwatch"
-    }
+  "lint-staged": {
+    "*.ts": [
+      "yarn lint",
+      "yarn test --findRelatedTests"
+    ]
   }
 }
