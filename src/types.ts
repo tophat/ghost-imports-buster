@@ -6,11 +6,6 @@ export interface Context {
     cwd: string
 }
 
-export interface PartialAnalysisConfiguration {
-    include?: Set<string>
-    exclude?: Set<string>
-}
-
 export interface AnalysisConfiguration {
     include: Set<string>
     exclude: Set<string>
