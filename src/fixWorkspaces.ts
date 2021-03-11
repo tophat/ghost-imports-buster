@@ -25,7 +25,7 @@ export default async function fixWorkspaces(
                 if (!workspaceName) throw new Error('MISSING_WORKSPACE_NAME')
 
                 const workspaceIdent = structUtils.stringifyIdent(workspaceName)
-                fixWorkspace(
+                await fixWorkspace(
                     context,
                     workspace,
                     resolvedVersionsFromNodeModules,
