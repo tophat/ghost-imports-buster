@@ -19,6 +19,8 @@ export interface AnalysisConfiguration {
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 
+export type PackageResolutions = Map<string, string>
+
 export interface Arguments {
     cwd?: string
     include?: string[]
