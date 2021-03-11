@@ -4,8 +4,12 @@ import { dirname, resolve } from 'path'
 
 export const TEST_PACKAGE_NAME = 'testpackage'
 
-export async function cleanUp(rootPath: string): Promise<void> {
-    await fs.rmdir(rootPath, { recursive: true })
+export async function cleanUp(paths: string[]): Promise<void> {
+    await Promise.all(
+        paths.map(async (tempPath) =>
+            fs.rmdir(tempPath, { recursive: true, force: true }),
+        ),
+    )
 }
 
 export async function prepareTempDirectory(
@@ -91,6 +95,10 @@ export async function declareDependencies(
     await createFile(cwd, 'package.json', JSON.stringify(currentPackageJson))
 
     return currentPackageJson
+}
+
+export async function readFile(path: string): string {
+    return fs.readFile(path, { encoding: 'utf8' })
 }
 
 export async function createFile(
