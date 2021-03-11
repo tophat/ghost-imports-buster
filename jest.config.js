@@ -8,5 +8,6 @@ module.exports = {
         '^.+\\.(ts|tsx)?$': 'babel-jest',
     },
     collectCoverage: true,
+    collectCoverageFrom: ['src/**/*.ts'],
     coverageDirectory: './coverage',
 }
