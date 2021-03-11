@@ -6,11 +6,6 @@ export interface Context {
     cwd: string
 }
 
-export interface PartialAnalysisConfiguration {
-    include?: Set<string>
-    exclude?: Set<string>
-}
-
 export interface AnalysisConfiguration {
     include: Set<string>
     exclude: Set<string>
@@ -18,6 +13,8 @@ export interface AnalysisConfiguration {
 }
 
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
+
+export type PackageResolutions = Map<string, string>
 
 export interface Arguments {
     cwd?: string

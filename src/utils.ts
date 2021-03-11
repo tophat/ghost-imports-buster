@@ -5,12 +5,7 @@ import { Configuration, Project } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
 import { PortablePath } from '@yarnpkg/fslib'
 
-import {
-    AnalysisConfiguration,
-    Arguments,
-    Context,
-    PartialAnalysisConfiguration,
-} from './types'
+import { AnalysisConfiguration, Arguments, Context } from './types'
 
 export async function getConfiguration(
     args: Arguments,
@@ -49,7 +44,7 @@ function getFullCwd(cwd?: string): string {
 
 async function maybeGetConfigurationFromFile(
     cwd: string,
-): Promise<PartialAnalysisConfiguration> {
+): Promise<Partial<AnalysisConfiguration>> {
     try {
         const configurationFromFile = await fs.readFile(
             resolve(cwd, '.ghostImports.json'),

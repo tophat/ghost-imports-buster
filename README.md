@@ -38,6 +38,10 @@ You can pass in parameters to the ghost import call to customize the analysis:
 |`exclude`|`string`|Glob to filter files to exclude when looking for imports. Same usage as `include`|
 |`fix`|`boolean`|When set, unused dependencies are removed and undeclared ones, added. This adds `latest` if available.|
 
+## Autofixing
+
+By default, `ghost-imports-buster` will attempt to resolve undeclared packages the (loosely) same way [node's `require` will](https://nodejs.org/api/modules.html#modules_all_together): by crawling from the current working directory and checking in every `node_modules` in its path to the file system root. If a package cannot be resolved, the `latest` from the registry will be used instead.
+
 ## Contributing
 
 

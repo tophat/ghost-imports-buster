@@ -7,6 +7,7 @@ import {
     declareDependencies,
     prepareTempDirectory,
     prepareTempMonorepoDirectory,
+    readFile,
 } from './testUtils'
 
 describe('GhostImports', () => {
@@ -18,7 +19,7 @@ describe('GhostImports', () => {
         })
 
         afterEach(async () => {
-            await cleanUp(workspacePath)
+            await cleanUp([workspacePath])
         })
 
         it('excludes specified "excluded" globs', async () => {
@@ -110,7 +111,7 @@ describe('GhostImports', () => {
         })
 
         afterEach(async () => {
-            await cleanUp(workspacePath)
+            await cleanUp([workspacePath])
         })
 
         it('detects require imports correctly', async () => {
@@ -221,7 +222,7 @@ describe('GhostImports', () => {
         })
 
         afterEach(async () => {
-            await cleanUp(workspacePath)
+            await cleanUp([workspacePath])
         })
 
         it('produces report with correct package analysis', async () => {
@@ -250,6 +251,47 @@ describe('GhostImports', () => {
             expect(report.undeclaredDependencies.get('mono3')).toEqual(
                 new Set(['pkg-1']),
             )
+        })
+    })
+
+    describe('autofixing', () => {
+        let tempPaths
+
+        beforeEach(async () => {
+            const createdPath = await prepareTempDirectory()
+            tempPaths = [createdPath]
+        })
+
+        afterEach(async () => {
+            await cleanUp(tempPaths)
+        })
+        it('resolves versions correct from node_modules if available', async () => {
+            const undeclaredPackageJson = {
+                version: '1.2.3',
+                name: 'pkg-1',
+            }
+            await createFile(
+                '/tmp',
+                'node_modules/pkg-1/package.json',
+                JSON.stringify(undeclaredPackageJson),
+            )
+
+            await createFile(
+                tempPaths[0],
+                'index.js',
+                `
+                     import { foo } from "pkg-1"
+
+                     foo()`,
+            )
+
+            await validateDependencies({ cwd: tempPaths[0], fix: true })
+            const manifest = await readFile(`${tempPaths[0]}/package.json`)
+            const parsedManifest = JSON.parse(manifest)
+
+            expect(parsedManifest.dependencies).toEqual({
+                [undeclaredPackageJson.name]: `^${undeclaredPackageJson.version}`,
+            })
         })
     })
 })
