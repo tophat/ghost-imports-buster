@@ -16,8 +16,18 @@ export interface ImportRecord {
     importedFrom: string
     imported: string
 }
+
 export type ImportRecordsByWorkspaceMap = Map<Workspace, Set<ImportRecord>>
 
+// TODO: Names are hard.
+export interface DependenciesMap {
+    dependencies: Set<string>
+    devDependencies: Set<string>
+    peerDependencies: Set<string>
+    transitivePeerDependencies: Set<string>
+}
+
+// TODO: Deprecate
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 
 export type PackageResolutions = Map<string, string>

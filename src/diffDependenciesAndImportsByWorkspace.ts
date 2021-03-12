@@ -1,16 +1,16 @@
-import { structUtils } from '@yarnpkg/core'
+import { Workspace, structUtils } from '@yarnpkg/core'
 
 import {
     Context,
+    DependenciesMap,
     DiffReport,
     ImportRecord,
     ImportRecordsByWorkspaceMap,
-    PackagesByWorkspaceMap,
 } from './types'
 
 export default function diffDependenciesAndImportsByWorkspace(
     context: Context,
-    dependenciesMap: PackagesByWorkspaceMap,
+    dependenciesMap: Map<Workspace, DependenciesMap>,
     importsMap: ImportRecordsByWorkspaceMap,
 ): DiffReport {
     const { workspaces } = context.project
@@ -22,9 +22,11 @@ export default function diffDependenciesAndImportsByWorkspace(
         const workspaceIdent = structUtils.stringifyIdent(
             workspace.manifest.name,
         )
-        const workspaceDependencies =
-            dependenciesMap.get(workspace) ?? new Set()
-        const workspaceImports = importsMap.get(workspace) ?? new Set()
+
+        const workspaceDependencies = dependenciesMap.get(workspace)
+        const workspaceImports = importsMap.get(workspace)
+
+        if (!workspaceDependencies || !workspaceImports) continue
 
         const undeclaredDependencies = getUndeclaredDependencies(
             workspaceDependencies,
@@ -45,36 +47,91 @@ export default function diffDependenciesAndImportsByWorkspace(
     }
 }
 
+// TODO
+function isDevFile(/*path: string*/): boolean {
+    return false
+}
+
 function getUndeclaredDependencies(
-    dependencies: Set<string>,
+    dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
 ): Set<string> {
     const undeclaredDependencies: Set<string> = new Set()
 
-    const imported = new Set(
-        [...imports].map((item: ImportRecord) => item.imported),
-    )
+    for (const importRecord of imports) {
+        const { imported, importedFrom } = importRecord
 
-    for (const importedPackage of imported) {
-        if (!dependencies.has(importedPackage))
-            undeclaredDependencies.add(importedPackage)
+        // Undeclared if not in dep or peerdep
+        // Allowed to be in dev if file matches dev glob.
+        // TODO: Add config option for dev allowed glob
+
+        if (dependenciesMap.dependencies.has(imported)) continue
+
+        if (
+            dependenciesMap.devDependencies.has(imported) &&
+            isDevFile(importedFrom)
+        )
+            continue
+
+        if (
+            dependenciesMap.peerDependencies.has(imported) &&
+            !isDevFile(importedFrom)
+        )
+            continue
+
+        undeclaredDependencies.add(imported)
     }
 
     return undeclaredDependencies
 }
 
+// TODO
+//function getMovableDependencies(): void {}
+
 function getUnusedDependencies(
-    dependencies: Set<string>,
+    dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
 ): Set<string> {
     const unusedDependencies: Set<string> = new Set()
 
-    const imported = new Set(
-        [...imports].map((item: ImportRecord) => item.imported),
-    )
+    const importsUsage = new Map<string, Set<string>>()
+    const devImportsUsage = new Map<string, Set<string>>()
 
-    for (const dependency of dependencies) {
-        if (!imported.has(dependency)) unusedDependencies.add(dependency)
+    for (const { imported, importedFrom } of imports.values()) {
+        const descriptor = structUtils.parseDescriptor(imported)
+        const ident = structUtils.stringifyIdent(descriptor)
+
+        if (isDevFile(importedFrom)) {
+            const devSet = devImportsUsage.get(ident) ?? new Set<string>()
+            devImportsUsage.set(ident, devSet)
+            devSet.add(importedFrom)
+        } else {
+            const depSet = importsUsage.get(ident) ?? new Set<string>()
+            importsUsage.set(ident, depSet)
+            depSet.add(importedFrom)
+        }
     }
+
+    for (const dependencyDescriptor of dependenciesMap.dependencies) {
+        const dependencyIdent = structUtils.stringifyIdent(
+            structUtils.parseDescriptor(dependencyDescriptor),
+        )
+        // Not considering ranges.
+        if (dependenciesMap.transitivePeerDependencies.has(dependencyIdent))
+            continue
+        if (importsUsage.get(dependencyIdent)?.size) continue
+
+        unusedDependencies.add(dependencyIdent)
+    }
+    for (const dependencyDescriptor of dependenciesMap.devDependencies) {
+        const dependencyIdent = structUtils.stringifyIdent(
+            structUtils.parseDescriptor(dependencyDescriptor),
+        )
+        // Unused if devSet[dependency] is empty
+        if (devImportsUsage?.get(dependencyIdent)?.size) continue
+
+        unusedDependencies.add(dependencyIdent)
+    }
+
     return unusedDependencies
 }
