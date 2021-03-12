@@ -12,6 +12,12 @@ export interface AnalysisConfiguration {
     fix: boolean
 }
 
+export interface ImportRecord {
+    importedFrom: string
+    imported: string
+}
+export type ImportRecordsByWorkspaceMap = Map<Workspace, Set<ImportRecord>>
+
 export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
 
 export type PackageResolutions = Map<string, string>

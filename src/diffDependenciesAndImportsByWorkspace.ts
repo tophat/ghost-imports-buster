@@ -1,11 +1,17 @@
 import { structUtils } from '@yarnpkg/core'
 
-import { Context, DiffReport, PackagesByWorkspaceMap } from './types'
+import {
+    Context,
+    DiffReport,
+    ImportRecord,
+    ImportRecordsByWorkspaceMap,
+    PackagesByWorkspaceMap,
+} from './types'
 
 export default function diffDependenciesAndImportsByWorkspace(
     context: Context,
     dependenciesMap: PackagesByWorkspaceMap,
-    importsMap: PackagesByWorkspaceMap,
+    importsMap: ImportRecordsByWorkspaceMap,
 ): DiffReport {
     const { workspaces } = context.project
     const undeclaredDependenciesMap = new Map()
@@ -41,11 +47,15 @@ export default function diffDependenciesAndImportsByWorkspace(
 
 function getUndeclaredDependencies(
     dependencies: Set<string>,
-    imports: Set<string>,
+    imports: Set<ImportRecord>,
 ): Set<string> {
     const undeclaredDependencies: Set<string> = new Set()
 
-    for (const importedPackage of imports) {
+    const imported = new Set(
+        [...imports].map((item: ImportRecord) => item.imported),
+    )
+
+    for (const importedPackage of imported) {
         if (!dependencies.has(importedPackage))
             undeclaredDependencies.add(importedPackage)
     }
@@ -55,12 +65,16 @@ function getUndeclaredDependencies(
 
 function getUnusedDependencies(
     dependencies: Set<string>,
-    imports: Set<string>,
+    imports: Set<ImportRecord>,
 ): Set<string> {
     const unusedDependencies: Set<string> = new Set()
 
+    const imported = new Set(
+        [...imports].map((item: ImportRecord) => item.imported),
+    )
+
     for (const dependency of dependencies) {
-        if (!imports.has(dependency)) unusedDependencies.add(dependency)
+        if (!imported.has(dependency)) unusedDependencies.add(dependency)
     }
     return unusedDependencies
 }

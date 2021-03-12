@@ -1,6 +1,5 @@
 import { promises as fs, readdirSync, statSync } from 'fs'
 import { join } from 'path'
-import Module from 'module'
 
 import minimatch from 'minimatch'
 import { parse } from '@babel/parser'
@@ -11,15 +10,16 @@ import {
     AnalysisConfiguration,
     BabelParserNode,
     Context,
-    PackagesByWorkspaceMap,
+    ImportRecord,
+    ImportRecordsByWorkspaceMap,
 } from './types'
 
 export default async function getImportsByWorkspaceMap(
     context: Context,
     configuration: AnalysisConfiguration,
-): Promise<PackagesByWorkspaceMap> {
+): Promise<ImportRecordsByWorkspaceMap> {
     const workspaces = context.project.workspaces
-    const importsMap: PackagesByWorkspaceMap = new Map()
+    const importsMap: ImportRecordsByWorkspaceMap = new Map()
 
     for (const workspace of workspaces) {
         const collectedImports = await collectImportsFromWorkspace(
@@ -34,14 +34,11 @@ export default async function getImportsByWorkspaceMap(
 async function collectImportsFromWorkspace(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
-): Promise<Set<string>> {
+): Promise<Set<ImportRecord>> {
     const workspaceRoot = workspace.cwd
     const workspacePaths = collectPaths(configuration, workspaceRoot)
 
-    const imports: Set<string> = new Set()
-
-    const isRelativeImport = (imported: string): boolean =>
-        imported?.startsWith('.')
+    const imports: Set<ImportRecord> = new Set()
 
     for (const filePath of workspacePaths) {
         const content = await fs.readFile(filePath, { encoding: 'utf8' })
@@ -53,24 +50,29 @@ async function collectImportsFromWorkspace(
         traverse(ast, {
             ImportDeclaration: function (path: BabelParserNode) {
                 const imported = path.node.source.value
-                if (
-                    !isRelativeImport(imported) &&
-                    !Module.builtinModules.includes(imported)
-                )
-                    imports.add(imported)
+                imports.add({ importedFrom: filePath, imported })
             },
             CallExpression: function (path: BabelParserNode) {
                 const callee = path.node.callee.name
                 const argumentType = path.node.arguments[0]?.type
+                const calleeProperty = path.node.property?.name
+                const calleeObject = path.node.object?.name
+
                 const imported = path.node.arguments[0]?.value
                 if (
-                    callee === 'require' &&
-                    argumentType === 'StringLiteral' &&
-                    !isRelativeImport(imported) &&
-                    !Module.builtinModules.includes(imported)
+                    ['require', 'import'].includes(callee) &&
+                    argumentType === 'StringLiteral' // &&
                 ) {
-                    imports.add(imported)
-                }
+                    imports.add({ importedFrom: filePath, imported })
+                } else if (
+                    calleeProperty === 'resolve' &&
+                    calleeObject === 'require' &&
+                    argumentType === 'StringLiteral'
+                )
+                    imports.add({ importedFrom: filePath, imported })
+
+                // TODO: Require ensure?
+                // TODO: Add logging if require without StringLiteral
             },
         })
     }
