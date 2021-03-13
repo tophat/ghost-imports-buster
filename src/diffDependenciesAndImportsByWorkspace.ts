@@ -1,3 +1,5 @@
+import path from 'path'
+
 import { Workspace, structUtils } from '@yarnpkg/core'
 
 import {
@@ -47,8 +49,15 @@ export default function diffDependenciesAndImportsByWorkspace(
     }
 }
 
-// TODO
-function isDevFile(/*path: string*/): boolean {
+// TODO: allow customization over default
+function isDevFile(filename: string): boolean {
+    const parts = filename.split(path.sep)
+    if (parts.some((p) => ['__tests__', 'tests'].includes(p))) {
+        return true
+    }
+    if (filename.includes('.test.')) {
+        return true
+    }
     return false
 }
 
@@ -58,23 +67,24 @@ function getUndeclaredDependencies(
 ): Set<string> {
     const undeclaredDependencies: Set<string> = new Set()
 
-    for (const importRecord of imports) {
-        const { imported, importedFrom } = importRecord
+    for (const { imported, importedFrom } of imports) {
+        const importedIdent = structUtils.parseIdent(imported)
+        const identHash = importedIdent.identHash
 
         // Undeclared if not in dep or peerdep
         // Allowed to be in dev if file matches dev glob.
         // TODO: Add config option for dev allowed glob
 
-        if (dependenciesMap.dependencies.has(imported)) continue
+        if (dependenciesMap.dependencies.has(identHash)) continue
 
         if (
-            dependenciesMap.devDependencies.has(imported) &&
+            dependenciesMap.devDependencies.has(identHash) &&
             isDevFile(importedFrom)
         )
             continue
 
         if (
-            dependenciesMap.peerDependencies.has(imported) &&
+            dependenciesMap.peerDependencies.has(identHash) &&
             !isDevFile(importedFrom)
         )
             continue
@@ -98,39 +108,39 @@ function getUnusedDependencies(
     const devImportsUsage = new Map<string, Set<string>>()
 
     for (const { imported, importedFrom } of imports.values()) {
-        const descriptor = structUtils.parseDescriptor(imported)
-        const ident = structUtils.stringifyIdent(descriptor)
-
         if (isDevFile(importedFrom)) {
-            const devSet = devImportsUsage.get(ident) ?? new Set<string>()
-            devImportsUsage.set(ident, devSet)
+            const devSet = devImportsUsage.get(imported) ?? new Set<string>()
+            devImportsUsage.set(imported, devSet)
             devSet.add(importedFrom)
         } else {
-            const depSet = importsUsage.get(ident) ?? new Set<string>()
-            importsUsage.set(ident, depSet)
+            const depSet = importsUsage.get(imported) ?? new Set<string>()
+            importsUsage.set(imported, depSet)
             depSet.add(importedFrom)
         }
     }
 
-    for (const dependencyDescriptor of dependenciesMap.dependencies) {
-        const dependencyIdent = structUtils.stringifyIdent(
-            structUtils.parseDescriptor(dependencyDescriptor),
-        )
+    for (const dependencyDescriptor of dependenciesMap.dependencies.values()) {
+        const dependencyName = structUtils.stringifyIdent(dependencyDescriptor)
+
         // Not considering ranges.
-        if (dependenciesMap.transitivePeerDependencies.has(dependencyIdent))
+        if (
+            dependenciesMap.transitivePeerDependencies.has(
+                dependencyDescriptor.identHash,
+            )
+        ) {
             continue
-        if (importsUsage.get(dependencyIdent)?.size) continue
+        }
 
-        unusedDependencies.add(dependencyIdent)
+        if (importsUsage.get(dependencyName)?.size) continue
+
+        unusedDependencies.add(dependencyName)
     }
-    for (const dependencyDescriptor of dependenciesMap.devDependencies) {
-        const dependencyIdent = structUtils.stringifyIdent(
-            structUtils.parseDescriptor(dependencyDescriptor),
-        )
+    for (const dependencyDescriptor of dependenciesMap.devDependencies.values()) {
+        const dependencyName = structUtils.stringifyIdent(dependencyDescriptor)
         // Unused if devSet[dependency] is empty
-        if (devImportsUsage?.get(dependencyIdent)?.size) continue
+        if (devImportsUsage?.get(dependencyName)?.size) continue
 
-        unusedDependencies.add(dependencyIdent)
+        unusedDependencies.add(dependencyName)
     }
 
     return unusedDependencies

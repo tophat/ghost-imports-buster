@@ -40,8 +40,29 @@ async function collectImportsFromWorkspace(
 
     const imports: Set<ImportRecord> = new Set()
 
-    for (const filePath of workspacePaths) {
-        const content = await fs.readFile(filePath, { encoding: 'utf8' })
+    // match up until path specifier (a "/" not used for scope):
+    //     @scope/name
+    //     name
+    const IMPORT_NAME_PATTERN = /^(?:(@[^/]+\/[^/]+)|([^.][^/]+))/
+
+    const visitPath = ({
+        importedFrom,
+        imported,
+    }: {
+        importedFrom: string
+        imported: string
+    }): void => {
+        const importedName = IMPORT_NAME_PATTERN.exec(imported)
+        if (!importedName) return
+
+        imports.add({
+            importedFrom,
+            imported: importedName[0],
+        })
+    }
+
+    for (const importedFrom of workspacePaths) {
+        const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
         const ast = parse(content, {
             plugins: ['typescript'],
             sourceType: 'module',
@@ -50,26 +71,29 @@ async function collectImportsFromWorkspace(
         traverse(ast, {
             ImportDeclaration: function (path: BabelParserNode) {
                 const imported = path.node.source.value
-                imports.add({ importedFrom: filePath, imported })
+                visitPath({ importedFrom, imported })
             },
             CallExpression: function (path: BabelParserNode) {
                 const callee = path.node.callee.name
                 const argumentType = path.node.arguments[0]?.type
                 const calleeProperty = path.node.property?.name
                 const calleeObject = path.node.object?.name
-
                 const imported = path.node.arguments[0]?.value
+
                 if (
                     ['require', 'import'].includes(callee) &&
                     argumentType === 'StringLiteral' // &&
                 ) {
-                    imports.add({ importedFrom: filePath, imported })
-                } else if (
+                    return visitPath({ importedFrom, imported })
+                }
+
+                if (
                     calleeProperty === 'resolve' &&
                     calleeObject === 'require' &&
                     argumentType === 'StringLiteral'
-                )
-                    imports.add({ importedFrom: filePath, imported })
+                ) {
+                    return visitPath({ importedFrom, imported })
+                }
 
                 // TODO: Require ensure?
                 // TODO: Add logging if require without StringLiteral

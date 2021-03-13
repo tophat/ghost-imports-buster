@@ -3,11 +3,11 @@ import chalk from 'chalk'
 import { Report } from './types'
 
 export default function printReport(report: Report): void {
-    for (const workspaceIdent of report.workspaces) {
-        const unused = report.unusedDependencies.get(workspaceIdent)
-        const undeclared = report.undeclaredDependencies.get(workspaceIdent)
+    for (const workspaceName of report.workspaces) {
+        const unused = report.unusedDependencies.get(workspaceName)
+        const undeclared = report.undeclaredDependencies.get(workspaceName)
 
-        console.log(`📦 ${workspaceIdent}`)
+        console.log(`📦 ${workspaceName}`)
 
         if (unused && unused.size > 0) {
             console.log(

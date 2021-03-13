@@ -1,4 +1,10 @@
-import { Configuration, Project, Workspace } from '@yarnpkg/core'
+import {
+    Configuration,
+    Descriptor,
+    IdentHash,
+    Project,
+    Workspace,
+} from '@yarnpkg/core'
 
 export interface Context {
     configuration: Configuration
@@ -21,10 +27,10 @@ export type ImportRecordsByWorkspaceMap = Map<Workspace, Set<ImportRecord>>
 
 // TODO: Names are hard.
 export interface DependenciesMap {
-    dependencies: Set<string>
-    devDependencies: Set<string>
-    peerDependencies: Set<string>
-    transitivePeerDependencies: Set<string>
+    dependencies: Map<IdentHash, Descriptor>
+    devDependencies: Map<IdentHash, Descriptor>
+    peerDependencies: Map<IdentHash, Descriptor>
+    transitivePeerDependencies: Map<IdentHash, Descriptor>
 }
 
 // TODO: Deprecate
