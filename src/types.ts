@@ -50,9 +50,6 @@ export interface DiffReport {
     unused: Map<string, Set<string>>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type BabelParserNode = any
-
 export interface Report {
     workspaces: Set<string>
     unusedDependencies: Map<string, Set<string>>

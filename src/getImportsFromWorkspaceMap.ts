@@ -1,15 +1,15 @@
-import { promises as fs, readdirSync, statSync } from 'fs'
+import { promises as fs } from 'fs'
 import { join } from 'path'
 import Module from 'module'
 
 import minimatch from 'minimatch'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
-import { Workspace } from '@yarnpkg/core'
+import { Workspace, structUtils } from '@yarnpkg/core'
+import { npath } from '@yarnpkg/fslib'
 
 import {
     AnalysisConfiguration,
-    BabelParserNode,
     Context,
     ImportRecord,
     ImportRecordsByWorkspaceMap,
@@ -36,8 +36,15 @@ async function collectImportsFromWorkspace(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
 ): Promise<Set<ImportRecord>> {
+    if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
+    const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
+
     const workspaceRoot = workspace.cwd
-    const workspacePaths = collectPaths(configuration, workspaceRoot)
+    const workspacePaths = await collectPaths(
+        configuration,
+        workspace,
+        workspaceRoot,
+    )
 
     const imports: Set<ImportRecord> = new Set()
 
@@ -82,34 +89,42 @@ async function collectImportsFromWorkspace(
         })
 
         traverse(ast, {
-            ImportDeclaration: function (path: BabelParserNode) {
+            ImportDeclaration: function (path) {
                 const imported = path.node.source.value
                 visitPath({ importedFrom, imported })
             },
-            CallExpression: function (path: BabelParserNode) {
-                const callee = path.node.callee.name
-                const argumentType = path.node.arguments[0]?.type
-                const calleeProperty = path.node.property?.name
-                const calleeObject = path.node.object?.name
-                const imported = path.node.arguments[0]?.value
+            CallExpression: function (path) {
+                const predicates = [
+                    // syntax:
+                    //    require('pkg')
+                    //    import('pkg')
+                    (): boolean =>
+                        path.node.callee.type === 'Identifier' &&
+                        ['require', 'import'].includes(path.node.callee.name),
+                    // syntax:
+                    //     require.resolve('pkg')
+                    (): boolean =>
+                        path.node.callee.type === 'MemberExpression' &&
+                        path.node.callee.property.type === 'Identifier' &&
+                        path.node.callee.property.name === 'resolve' &&
+                        path.node.callee.object.type === 'Identifier' &&
+                        path.node.callee.object.name === 'require',
+                ]
 
-                if (
-                    ['require', 'import'].includes(callee) &&
-                    argumentType === 'StringLiteral' // &&
-                ) {
-                    return visitPath({ importedFrom, imported })
+                if (predicates.some((p) => p())) {
+                    const argument = path.node.arguments[0]
+                    if (argument?.type === 'StringLiteral') {
+                        visitPath({ importedFrom, imported: argument.value })
+                    } else {
+                        console.warn(
+                            `[${workspaceName}] A non-literal expression has been found in a "require" call, unable to determine import\n` +
+                                `    at %s:%s:%s\n`,
+                            importedFrom,
+                            path.node.loc?.start.line ?? 0,
+                            path.node.loc?.start.column ?? 0,
+                        )
+                    }
                 }
-
-                if (
-                    calleeProperty === 'resolve' &&
-                    calleeObject === 'require' &&
-                    argumentType === 'StringLiteral'
-                ) {
-                    return visitPath({ importedFrom, imported })
-                }
-
-                // TODO: Require ensure?
-                // TODO: Add logging if require without StringLiteral
             },
         })
     }
@@ -117,11 +132,12 @@ async function collectImportsFromWorkspace(
     return imports
 }
 
-function collectPaths(
+async function collectPaths(
     configuration: AnalysisConfiguration,
+    workspace: Workspace,
     root: string,
-): Set<string> {
-    const rootStat = statSync(root)
+): Promise<Set<string>> {
+    const rootStat = await fs.stat(root)
 
     if (!rootStat.isDirectory()) {
         const isIncluded = [
@@ -139,17 +155,31 @@ function collectPaths(
             : new Set()
     }
 
-    const directoryListing = readdirSync(root)
-
-    const collectedPaths = directoryListing.reduce(
-        (paths: string[], current: string): string[] => {
-            return [
-                ...paths,
-                ...collectPaths(configuration, join(root, current)),
-            ]
-        },
-        [],
+    // if dir belongs to another workspace, don't return any files
+    const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
+        npath.toPortablePath(root),
     )
+    if (
+        !discoveredWorkspace ||
+        !structUtils.areDescriptorsEqual(
+            discoveredWorkspace.anchoredDescriptor,
+            workspace.anchoredDescriptor,
+        )
+    ) {
+        return new Set()
+    }
+
+    const directoryListing = await fs.readdir(root)
+    const collectedPaths = []
+    for (const current of directoryListing) {
+        collectedPaths.push(
+            ...(await collectPaths(
+                configuration,
+                workspace,
+                join(root, current),
+            )),
+        )
+    }
 
     return new Set(collectedPaths)
 }
