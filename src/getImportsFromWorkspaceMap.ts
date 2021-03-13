@@ -1,5 +1,6 @@
 import { promises as fs, readdirSync, statSync } from 'fs'
 import { join } from 'path'
+import Module from 'module'
 
 import minimatch from 'minimatch'
 import { parse } from '@babel/parser'
@@ -52,6 +53,18 @@ async function collectImportsFromWorkspace(
         importedFrom: string
         imported: string
     }): void => {
+        try {
+            if (
+                Module.builtinModules.includes(
+                    require.resolve(imported, { paths: [importedFrom] }),
+                )
+            ) {
+                return
+            }
+        } catch {
+            /* ignore */
+        }
+
         const importedName = IMPORT_NAME_PATTERN.exec(imported)
         if (!importedName) return
 
