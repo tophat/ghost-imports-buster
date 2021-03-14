@@ -14,6 +14,7 @@ export default async function validateDependencies(
     // Get context and configuration.
     const configuration = await getConfiguration(args)
     const context = await getContext(args.cwd)
+    await context.project.restoreInstallState()
 
     // Build dependencies and import map for all workspaces
     const dependenciesMap = await getDependenciesByWorkspaceMap(context)
@@ -22,6 +23,7 @@ export default async function validateDependencies(
     // Diff dependencies and imports by workspace
     const diffReport = diffDependenciesAndImportsByWorkspace(
         context,
+        configuration,
         dependenciesMap,
         importsMap,
     )

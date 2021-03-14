@@ -14,14 +14,8 @@ async function getTransitivePeerDependencies(
 ): Promise<Map<IdentHash, Descriptor>> {
     const transitivePeerDeps = new Map<IdentHash, Descriptor>()
 
-    const manifest = workspace.manifest
-    const locatorHashes = [
-        ...manifest.getForScope('dependencies').values(),
-        ...manifest.getForScope('devDependencies').values(),
-        ...manifest.getForScope('peerDependencies').values(),
-    ]
+    const locatorHashes = [...workspace.dependencies.values()]
         .map((descriptor) =>
-            // TODO: not storedResolutions
             workspace.project.storedResolutions.get(descriptor.descriptorHash),
         )
         .filter((hash: LocatorHash | undefined): hash is LocatorHash =>
@@ -54,13 +48,12 @@ async function getBinaries(
         return binaries
     }
 
-    const manifest = workspace.manifest
-    const locatorHashes = [
-        ...manifest.getForScope('dependencies').values(),
-        ...manifest.getForScope('devDependencies').values(),
-    ]
-        .map((descriptor) =>
-            // TODO: not storedResolutions
+    const locatorHashes = [...workspace.dependencies.entries()]
+        .filter(
+            ([identHash]) =>
+                !workspace.manifest.peerDependencies.has(identHash),
+        )
+        .map(([, descriptor]) =>
             workspace.project.storedResolutions.get(descriptor.descriptorHash),
         )
         .filter((hash: LocatorHash | undefined): hash is LocatorHash =>
@@ -68,7 +61,7 @@ async function getBinaries(
         )
 
     for (const locatorHash of locatorHashes) {
-        const pkg = workspace.project.originalPackages.get(locatorHash)
+        const pkg = workspace.project.storedPackages.get(locatorHash)
         if (pkg?.bin.size) binaries.set(pkg.identHash, pkg)
     }
 
