@@ -33,9 +33,6 @@ export interface DependenciesMap {
     transitivePeerDependencies: Map<IdentHash, Descriptor>
 }
 
-// TODO: Deprecate
-export type PackagesByWorkspaceMap = Map<Workspace, Set<string>>
-
 export type PackageResolutions = Map<string, string>
 
 export interface Arguments {
