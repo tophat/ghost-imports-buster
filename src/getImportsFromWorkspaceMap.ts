@@ -37,7 +37,6 @@ async function collectImportsFromWorkspace(
 ): Promise<Set<ImportRecord>> {
     if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
     const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
-
     const workspaceRoot = workspace.cwd
     const imports: Set<ImportRecord> = new Set()
 
@@ -136,11 +135,11 @@ async function* collectPaths(
 ): AsyncIterable<string> {
     const basename = path.basename(filename)
     const stat = await fs.stat(filename)
-
     if (
-        !configuration.includeFiles(filename) ||
-        basename.startsWith('.') ||
-        configuration.excludeFiles(filename)
+        !stat.isDirectory() &&
+        (!configuration.includeFiles(filename) ||
+            basename.startsWith('.') ||
+            configuration.excludeFiles(filename))
     ) {
         return
     }
