@@ -93,7 +93,6 @@ async function maybeGetConfigurationFromFile(
         )
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const configuration = require(configurationFilePath) || {}
-
         const { includeFiles, excludeFiles, excludePackages } = configuration
         const includeFilesFromConfig =
             typeof includeFiles === 'function'
@@ -109,7 +108,7 @@ async function maybeGetConfigurationFromFile(
                 : (filename: string): boolean =>
                       excludeFiles?.some?.((pattern: string) =>
                           minimatch(filename, pattern),
-                      ) ?? true
+                      ) ?? false
 
         const excludePackagesFromConfig =
             typeof excludePackages === 'function'
