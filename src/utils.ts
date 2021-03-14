@@ -1,9 +1,9 @@
 import { resolve } from 'path'
 
 import minimatch from 'minimatch'
-import { Configuration, Project } from '@yarnpkg/core'
+import { Configuration, Descriptor, Project, structUtils } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
-import { PortablePath, npath } from '@yarnpkg/fslib'
+import { npath } from '@yarnpkg/fslib'
 
 import {
     AnalysisConfiguration,
@@ -56,13 +56,25 @@ export async function getConfiguration(
 }
 
 export async function getContext(cwd?: string): Promise<Context> {
-    const fullCwd = getFullCwd(cwd) as PortablePath
+    const fullCwd = npath.toPortablePath(getFullCwd(cwd))
     const configuration = await Configuration.find(
         fullCwd,
         getPluginConfiguration(),
     )
-    const { project } = await Project.find(configuration, fullCwd)
-    return { configuration, project, cwd: fullCwd }
+    const { project, workspace } = await Project.find(configuration, fullCwd)
+    if (!workspace) throw new Error('Could not find workspace.')
+
+    const isTopLevelWorkspace = structUtils.areDescriptorsEqual(
+        workspace.anchoredDescriptor,
+        workspace.project.topLevelWorkspace.anchoredDescriptor,
+    )
+    const workspaceCwds = new Set(
+        isTopLevelWorkspace
+            ? project.workspaces.map((w) => w.cwd)
+            : [workspace.cwd],
+    )
+
+    return { configuration, project, cwd: workspace.cwd, workspaceCwds }
 }
 
 function getFullCwd(cwd?: string): string {

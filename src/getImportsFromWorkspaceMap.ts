@@ -18,7 +18,9 @@ export default async function getImportsByWorkspaceMap(
     context: Context,
     configuration: AnalysisConfiguration,
 ): Promise<ImportRecordsByWorkspaceMap> {
-    const workspaces = context.project.workspaces
+    const workspaces = [...context.workspaceCwds].map((cwd) =>
+        context.project.getWorkspaceByCwd(npath.toPortablePath(cwd)),
+    )
     const importsMap: ImportRecordsByWorkspaceMap = new Map()
 
     for (const workspace of workspaces) {
@@ -135,10 +137,12 @@ async function* collectPaths(
 ): AsyncIterable<string> {
     const basename = path.basename(filename)
     const stat = await fs.stat(filename)
+
+    if (basename.startsWith('.')) return
+
     if (
         !stat.isDirectory() &&
         (!configuration.includeFiles(filename) ||
-            basename.startsWith('.') ||
             configuration.excludeFiles(filename))
     ) {
         return

@@ -15,6 +15,7 @@ export interface Context {
     configuration: Configuration
     project: Project
     cwd: string
+    workspaceCwds: Set<string>
 }
 
 export interface AnalysisConfiguration {

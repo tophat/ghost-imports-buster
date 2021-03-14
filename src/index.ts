@@ -1,4 +1,5 @@
 import { structUtils } from '@yarnpkg/core'
+import { npath } from '@yarnpkg/fslib'
 
 import { getConfiguration, getContext } from './utils'
 import getImportsByWorkspaceMap from './getImportsFromWorkspaceMap'
@@ -30,7 +31,10 @@ export default async function validateDependencies(
 
     const workspaceIdents: Set<string> = new Set()
 
-    for (const workspace of context.project.workspaces) {
+    for (const workspaceCwd of context.workspaceCwds) {
+        const workspace = context.project.getWorkspaceByCwd(
+            npath.toPortablePath(workspaceCwd),
+        )
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
         const ident = structUtils.stringifyIdent(workspace.manifest.name)
         workspaceIdents.add(ident)

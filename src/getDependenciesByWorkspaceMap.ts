@@ -6,6 +6,7 @@ import {
     Workspace,
     structUtils,
 } from '@yarnpkg/core'
+import { npath } from '@yarnpkg/fslib'
 
 import { Context, DependenciesMap } from './types'
 
@@ -73,7 +74,10 @@ export default async function getDependenciesByWorkspaceMap(
 ): Promise<Map<Workspace, DependenciesMap>> {
     const dependenciesByWorkspace: Map<Workspace, DependenciesMap> = new Map()
 
-    for (const workspace of context.project.workspaces) {
+    for (const workspaceCwd of context.workspaceCwds) {
+        const workspace = context.project.getWorkspaceByCwd(
+            npath.toPortablePath(workspaceCwd),
+        )
         const manifest = workspace.manifest
         dependenciesByWorkspace.set(workspace, {
             dependencies: manifest.getForScope('dependencies'),

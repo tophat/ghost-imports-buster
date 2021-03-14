@@ -1,12 +1,15 @@
 import validateDependencies from '../src'
 
-import { createFile, readFile, withDirectoryContext } from './testUtils'
+import { createFile, readFile } from './testUtils'
+
+import { withMonorepoContext } from './setupMonorepo'
 
 describe('autofixing', () => {
-    it('resolves versions correct from node_modules if available', async () =>
-        withDirectoryContext(
+    it.skip('resolves versions correct from node_modules if available', async () =>
+        withMonorepoContext(
             {
                 'pkg-1': {},
+                'pkg-2': {},
             },
             async (projectRoot) => {
                 const undeclaredPackageJson = {
