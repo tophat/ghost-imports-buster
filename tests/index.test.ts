@@ -1,18 +1,19 @@
 import validateDependencies from '../src'
 
-import { createFile, withDirectoryContext } from './testUtils'
+import { createFile, withMonorepoContext } from './testUtils'
 
 describe('GhostImports', () => {
     describe('High-level use cases (single project)', () => {
         it('detects require imports correctly', async () =>
-            withDirectoryContext(
+            await withMonorepoContext(
                 {
-                    pkg: { dependencies: { 'pkg-1': '*', 'pkg-3': '*' } },
+                    root: { dependencies: ['pkg-1', 'pkg-3'] },
+                    'pkg-1': {},
+                    'pkg-3': {},
                 },
                 async (projectRoot) => {
-                    const packageRoot = `${projectRoot}/pkg/`
                     await createFile(
-                        packageRoot,
+                        projectRoot,
                         'index.js',
                         `
                          const { foo } = require("pkg-1")
@@ -21,27 +22,27 @@ describe('GhostImports', () => {
                          foo()`,
                     )
                     const report = await validateDependencies({
-                        cwd: packageRoot,
+                        cwd: projectRoot,
                     })
 
-                    expect(report.undeclaredDependencies.get('pkg')).toEqual(
+                    expect(report.undeclaredDependencies.get('root')).toEqual(
                         new Set(['pkg-2']),
                     )
-                    expect(report.unusedDependencies.get('pkg')).toEqual(
+                    expect(report.unusedDependencies.get('root')).toEqual(
                         new Set(['pkg-3']),
                     )
                 },
             ))
 
         it('produces report when no undeclared dependencies', async () =>
-            withDirectoryContext(
+            await withMonorepoContext(
                 {
-                    pkg: { dependencies: { 'pkg-1': '*' } },
+                    root: { dependencies: ['pkg-1'] },
+                    'pkg-1': {},
                 },
                 async (projectRoot) => {
-                    const packageRoot = `${projectRoot}/pkg`
                     await createFile(
-                        packageRoot,
+                        projectRoot,
                         'index.js',
                         `
                          import { foo } from "pkg-1"
@@ -49,28 +50,27 @@ describe('GhostImports', () => {
                          foo()`,
                     )
                     const report = await validateDependencies({
-                        cwd: packageRoot,
+                        cwd: projectRoot,
                     })
 
                     expect(
-                        report.undeclaredDependencies.get('pkg')?.size,
+                        report.undeclaredDependencies.get('root')?.size,
                     ).toEqual(0)
-                    expect(report.unusedDependencies.get('pkg')?.size).toEqual(
+                    expect(report.unusedDependencies.get('root')?.size).toEqual(
                         0,
                     )
                 },
             ))
 
         it('produces report when undeclared dependencies are present', async () =>
-            withDirectoryContext(
+            await withMonorepoContext(
                 {
-                    pkg: { dependencies: { 'pkg-1': '*' } },
+                    root: { dependencies: ['pkg-1'] },
+                    'pkg-1': {},
                 },
                 async (projectRoot) => {
-                    const packageRoot = `${projectRoot}/pkg`
-
                     await createFile(
-                        packageRoot,
+                        projectRoot,
                         'index.js',
                         `
                          import { foo } from "pkg-1"
@@ -79,27 +79,28 @@ describe('GhostImports', () => {
                          foo()`,
                     )
                     const report = await validateDependencies({
-                        cwd: packageRoot,
+                        cwd: projectRoot,
                     })
 
-                    expect(report.undeclaredDependencies.get('pkg')).toEqual(
+                    expect(report.undeclaredDependencies.get('root')).toEqual(
                         new Set(['pkg-2']),
                     )
-                    expect(report.unusedDependencies.get('pkg')?.size).toEqual(
+                    expect(report.unusedDependencies.get('root')?.size).toEqual(
                         0,
                     )
                 },
             ))
 
         it('produces report when unused dependencies are present', async () =>
-            withDirectoryContext(
+            await withMonorepoContext(
                 {
-                    pkg: { dependencies: { 'pkg-1': '*', 'pkg-2': '*' } },
+                    root: { dependencies: ['pkg-1', 'pkg-2'] },
+                    'pkg-1': {},
+                    'pkg-2': {},
                 },
                 async (projectRoot) => {
-                    const packageRoot = `${projectRoot}/pkg`
                     await createFile(
-                        packageRoot,
+                        projectRoot,
                         'index.js',
                         `
                      import { foo } from "pkg-1"
@@ -107,14 +108,14 @@ describe('GhostImports', () => {
                      foo()`,
                     )
                     const report = await validateDependencies({
-                        cwd: packageRoot,
+                        cwd: projectRoot,
                     })
 
-                    expect(report.unusedDependencies.get('pkg')).toEqual(
+                    expect(report.unusedDependencies.get('root')).toEqual(
                         new Set(['pkg-2']),
                     )
                     expect(
-                        report.undeclaredDependencies.get('pkg')?.size,
+                        report.undeclaredDependencies.get('root')?.size,
                     ).toEqual(0)
                 },
             ))
@@ -122,16 +123,16 @@ describe('GhostImports', () => {
 
     describe('High-level use cases (monorepo)', () => {
         it('produces report with correct package analysis', async () =>
-            withDirectoryContext(
+            await withMonorepoContext(
                 {
-                    root: { workspaces: ['packages/*'], private: true },
+                    root: {},
                     'pkg-1': {},
-                    'pkg-2': { dependencies: { 'pkg-1': '*' } },
+                    'pkg-2': { dependencies: ['pkg-1'] },
                     'pkg-3': {},
                 },
                 async (projectRoot) => {
                     await createFile(
-                        `${projectRoot}/root/packages/pkg-3/`,
+                        `${projectRoot}/packages/pkg-3/`,
                         'index.js',
                         `
                      import { foo } from "pkg-1"
@@ -139,7 +140,7 @@ describe('GhostImports', () => {
                      foo()`,
                     )
                     const report = await validateDependencies({
-                        cwd: `${projectRoot}/root/`,
+                        cwd: projectRoot,
                     })
 
                     expect(

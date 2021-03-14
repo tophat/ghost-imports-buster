@@ -1,15 +1,17 @@
 import validateDependencies from '../src'
 
-import { createFile, withDirectoryContext } from './testUtils'
+import { createFile, withMonorepoContext } from './testUtils'
 
 describe('Configuration', () => {
     it('excludes specified "excluded" globs', async () =>
-        withDirectoryContext(
+        await withMonorepoContext(
             {
-                'pkg-1': { dependencies: { 'pkg-2': '*' } },
+                root: {},
+                'pkg-1': { dependencies: ['pkg-2'] },
+                'pkg-2': {},
             },
             async (tempRoot) => {
-                const packageRoot = `${tempRoot}/pkg-1/`
+                const packageRoot = `${tempRoot}/packages/pkg-1/`
                 await createFile(
                     packageRoot,
                     'index.js',
@@ -32,12 +34,14 @@ describe('Configuration', () => {
         ))
 
     it('includes everything if no glob is given', async () =>
-        withDirectoryContext(
+        await withMonorepoContext(
             {
-                'pkg-1': { dependencies: { 'pkg-2': '*' } },
+                root: {},
+                'pkg-1': { dependencies: ['pkg-2'] },
+                'pkg-2': {},
             },
             async (tempRoot) => {
-                const packageRoot = `${tempRoot}/pkg-1/`
+                const packageRoot = `${tempRoot}/packages/pkg-1/`
                 await createFile(
                     packageRoot,
                     'index.js',
@@ -59,12 +63,14 @@ describe('Configuration', () => {
         ))
 
     it('includes specified "included" globs', async () =>
-        withDirectoryContext(
+        await withMonorepoContext(
             {
-                'pkg-1': { dependencies: { 'pkg-2': '*' } },
+                root: {},
+                'pkg-1': { dependencies: ['pkg-2'] },
+                'pkg-2': {},
             },
             async (tempRoot) => {
-                const packageRoot = `${tempRoot}/pkg-1/`
+                const packageRoot = `${tempRoot}/packages/pkg-1/`
                 await createFile(
                     packageRoot,
                     'index.js',
@@ -87,9 +93,11 @@ describe('Configuration', () => {
         ))
 
     it('conflicting globs will exclude the matched results', async () =>
-        withDirectoryContext(
+        await withMonorepoContext(
             {
-                'pkg-1': { dependencies: { 'pkg-2': '*' } },
+                root: {},
+                'pkg-1': { dependencies: ['pkg-2'] },
+                'pkg-2': {},
             },
             async (tempRoot) => {
                 const packageRoot = `${tempRoot}/pkg-1/`

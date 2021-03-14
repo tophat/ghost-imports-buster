@@ -1733,17 +1733,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^12.12.7":
-  version: 12.20.4
-  resolution: "@types/node@npm:12.20.4"
-  checksum: 30f1f5d8159fcb968206706f0f943167731f3d0763602571af29676b1afdcfe3b41524442cacdee3853a456dcd11d0e3ab2bf28b6821dfa2749a4b393fe7b510
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^13.7.0":
   version: 13.13.45
   resolution: "@types/node@npm:13.13.45"
   checksum: a7dd1e4623e66c1c23ed6d55396c01b27a1584474bc7422007c9e499ebf10f825a9a38952e5b201eac5fb8954c56c46126f4a2fa7dd71d0d129da1e803a77221
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^14.0.0":
+  version: 14.14.34
+  resolution: "@types/node@npm:14.14.34"
+  checksum: 06e49670700f9f8c9115232898c20bcb45abff9bac2a344cb046534c85cd19d91a4e86aa23fd022ac2b5d1ab3a68c5e220b96185cf7ae7d8e948736b217a5945
   languageName: node
   linkType: hard
 
@@ -4650,7 +4650,7 @@ fsevents@^1.2.7:
     "@types/babel__traverse": ^7.11.0
     "@types/jest": ^24.0.23
     "@types/minimatch": ^3.0.3
-    "@types/node": ^12.12.7
+    "@types/node": ^14.0.0
     "@types/yargs": ^16.0.0
     "@typescript-eslint/eslint-plugin": ^2.7.0
     "@typescript-eslint/parser": ^2.7.0

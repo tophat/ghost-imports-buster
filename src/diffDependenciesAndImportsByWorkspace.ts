@@ -3,6 +3,7 @@ import path from 'path'
 import { Workspace, structUtils } from '@yarnpkg/core'
 
 import {
+    AnalysisConfiguration,
     Context,
     DependenciesMap,
     DiffReport,
@@ -12,6 +13,7 @@ import {
 
 export default function diffDependenciesAndImportsByWorkspace(
     context: Context,
+    configuration: AnalysisConfiguration,
     dependenciesMap: Map<Workspace, DependenciesMap>,
     importsMap: ImportRecordsByWorkspaceMap,
 ): DiffReport {
@@ -35,6 +37,7 @@ export default function diffDependenciesAndImportsByWorkspace(
             workspaceImports,
         )
         const unusedDependencies = getUnusedDependencies(
+            configuration,
             workspaceDependencies,
             workspaceImports,
         )
@@ -99,6 +102,7 @@ function getUndeclaredDependencies(
 //function getMovableDependencies(): void {}
 
 function getUnusedDependencies(
+    configuration: AnalysisConfiguration,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
 ): Set<string> {
@@ -133,7 +137,8 @@ function getUnusedDependencies(
 
         if (
             importsUsage.has(dependencyName) ||
-            dependenciesMap.binaries.has(dependencyDescriptor.identHash)
+            dependenciesMap.binaries.has(dependencyDescriptor.identHash) ||
+            configuration.excludePackages(dependencyName)
         ) {
             continue
         }
@@ -141,10 +146,21 @@ function getUnusedDependencies(
     }
     for (const dependencyDescriptor of dependenciesMap.devDependencies.values()) {
         const dependencyName = structUtils.stringifyIdent(dependencyDescriptor)
+
+        // should we do this for dev as well outside of root?
+        if (
+            dependenciesMap.transitivePeerDependencies.has(
+                dependencyDescriptor.identHash,
+            )
+        ) {
+            continue
+        }
+
         // Unused if devSet[dependency] is empty
         if (
             devImportsUsage?.has(dependencyName) ||
-            dependenciesMap.binaries.has(dependencyDescriptor.identHash)
+            dependenciesMap.binaries.has(dependencyDescriptor.identHash) ||
+            configuration.excludePackages(dependencyName)
         ) {
             continue
         }
