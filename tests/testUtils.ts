@@ -43,7 +43,6 @@ export async function withDirectoryContext(
                 JSON.stringify(packageManifest),
             )
             await createFile(projectPath, 'yarn.lock', '')
-            console.log(projectPath)
         }
         await callback(rootPath)
     } catch (e) {
