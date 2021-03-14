@@ -1,7 +1,6 @@
 import validateDependencies from '../src'
 
-import { createFile } from './testUtils'
-import { withMonorepoContext } from './setupMonorepo'
+import { createFile, withMonorepoContext } from './testUtils'
 
 describe('Configuration', () => {
     it('excludes specified "excluded" globs', async () =>

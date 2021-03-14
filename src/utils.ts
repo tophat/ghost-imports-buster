@@ -1,7 +1,7 @@
 import { resolve } from 'path'
 
 import minimatch from 'minimatch'
-import { Configuration, Descriptor, Project, structUtils } from '@yarnpkg/core'
+import { Configuration, Project, structUtils } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
 import { npath } from '@yarnpkg/fslib'
 

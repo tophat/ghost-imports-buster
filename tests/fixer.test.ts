@@ -1,10 +1,9 @@
 import validateDependencies from '../src'
 
-import { createFile, readFile } from './testUtils'
-
-import { withMonorepoContext } from './setupMonorepo'
+import { createFile, readFile, withMonorepoContext } from './testUtils'
 
 describe('autofixing', () => {
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('resolves versions correct from node_modules if available', async () =>
         withMonorepoContext(
             {

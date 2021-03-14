@@ -1,7 +1,6 @@
 import validateDependencies from '../src'
 
-import { createFile } from './testUtils'
-import { withMonorepoContext } from './setupMonorepo'
+import { createFile, withMonorepoContext } from './testUtils'
 
 describe('GhostImports', () => {
     describe('High-level use cases (single project)', () => {

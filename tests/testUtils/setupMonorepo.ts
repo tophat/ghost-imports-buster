@@ -44,7 +44,7 @@ type PackageInitConfiguration = Partial<{
     version: string
 }>
 
-export default async function setupMonorepo(
+export async function setupMonorepo(
     monorepo: Record<string, PackageInitConfiguration> & {
         root?: Partial<{
             dependencies: Array<string> | Record<string, string>
@@ -97,7 +97,7 @@ export default async function setupMonorepo(
     }
 
     // Generate .yarnrc.yml
-    const releasesDir = path.join(__dirname, '..', '.yarn', 'releases')
+    const releasesDir = path.join(__dirname, '..', '..', '.yarn', 'releases')
     const yarnBinary = path.resolve(path.join(releasesDir, 'yarn-sources.cjs'))
     await fs.symlink(yarnBinary, path.join(workingDir, 'run-yarn.cjs'))
     await fs.writeFile(
