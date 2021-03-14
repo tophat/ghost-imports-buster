@@ -3,18 +3,18 @@ import validateDependencies from '../src'
 import { createFile, readFile, withDirectoryContext } from './testUtils'
 
 describe('autofixing', () => {
-    it('resolves versions correct from node_modules if available', async () => {
-        await withDirectoryContext(
+    it('resolves versions correct from node_modules if available', async () =>
+        withDirectoryContext(
             {
                 'pkg-1': {},
             },
-            async (projectRoot: string) => {
+            async (projectRoot) => {
                 const undeclaredPackageJson = {
                     version: '1.2.3',
                     name: 'pkg-2',
                 }
                 await createFile(
-                    projectRoot,
+                    projectRoot as string,
                     'node_modules/pkg-2/package.json',
                     JSON.stringify(undeclaredPackageJson),
                 )
@@ -41,6 +41,5 @@ describe('autofixing', () => {
                     [undeclaredPackageJson.name]: `^${undeclaredPackageJson.version}`,
                 })
             },
-        )
-    })
+        ))
 })

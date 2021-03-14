@@ -4,8 +4,8 @@ import { createFile, withDirectoryContext } from './testUtils'
 
 describe('GhostImports', () => {
     describe('High-level use cases (single project)', () => {
-        it('detects require imports correctly', async () => {
-            await withDirectoryContext(
+        it('detects require imports correctly', async () =>
+            withDirectoryContext(
                 {
                     pkg: { dependencies: { 'pkg-1': '*', 'pkg-3': '*' } },
                 },
@@ -31,11 +31,10 @@ describe('GhostImports', () => {
                         new Set(['pkg-3']),
                     )
                 },
-            )
-        })
+            ))
 
-        it('produces report when no undeclared dependencies', async () => {
-            await withDirectoryContext(
+        it('produces report when no undeclared dependencies', async () =>
+            withDirectoryContext(
                 {
                     pkg: { dependencies: { 'pkg-1': '*' } },
                 },
@@ -60,11 +59,10 @@ describe('GhostImports', () => {
                         0,
                     )
                 },
-            )
-        })
+            ))
 
-        it('produces report when undeclared dependencies are present', async () => {
-            await withDirectoryContext(
+        it('produces report when undeclared dependencies are present', async () =>
+            withDirectoryContext(
                 {
                     pkg: { dependencies: { 'pkg-1': '*' } },
                 },
@@ -91,11 +89,10 @@ describe('GhostImports', () => {
                         0,
                     )
                 },
-            )
-        })
+            ))
 
-        it('produces report when unused dependencies are present', async () => {
-            await withDirectoryContext(
+        it('produces report when unused dependencies are present', async () =>
+            withDirectoryContext(
                 {
                     pkg: { dependencies: { 'pkg-1': '*', 'pkg-2': '*' } },
                 },
@@ -120,13 +117,12 @@ describe('GhostImports', () => {
                         report.undeclaredDependencies.get('pkg')?.size,
                     ).toEqual(0)
                 },
-            )
-        })
+            ))
     })
 
     describe('High-level use cases (monorepo)', () => {
-        it('produces report with correct package analysis', async () => {
-            await withDirectoryContext(
+        it('produces report with correct package analysis', async () =>
+            withDirectoryContext(
                 {
                     root: { workspaces: ['packages/*'], private: true },
                     'pkg-1': {},
@@ -166,7 +162,6 @@ describe('GhostImports', () => {
                         new Set(['pkg-1']),
                     )
                 },
-            )
-        })
+            ))
     })
 })
