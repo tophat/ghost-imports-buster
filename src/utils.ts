@@ -1,11 +1,17 @@
 import { resolve } from 'path'
-import { promises as fs } from 'fs'
 
+import minimatch from 'minimatch'
 import { Configuration, Project } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
 import { PortablePath } from '@yarnpkg/fslib'
 
-import { AnalysisConfiguration, Arguments, Context } from './types'
+import {
+    AnalysisConfiguration,
+    Arguments,
+    Context,
+    FileMatchPredicate,
+    PackageMatchPredicate,
+} from './types'
 
 export async function getConfiguration(
     args: Arguments,
@@ -14,16 +20,42 @@ export async function getConfiguration(
         getFullCwd(args.cwd),
     )
 
-    const includesFromFile = configurationFromFile.include ?? []
-    const includesFromArgs = args.include ?? []
-    const mergedIncludes = [...includesFromFile, ...includesFromArgs]
+    // TODO: Add support for workspace-level ex
+    const includeFilesFromFile = configurationFromFile.includeFiles
+    const excludeFilesFromFile = configurationFromFile.excludeFiles
+    const excludePackagesFromFile = configurationFromFile.excludePackages
 
-    const excludesFromFile = configurationFromFile.exclude ?? []
-    const excludesFromArgs = args.exclude ?? []
+    const includeFilesFromArgs = args.includeFiles
+    const excludeFilesFromArgs = args.excludeFiles
+    const excludePackagesFromArgs = args.excludePackages
 
+    const includeFiles: FileMatchPredicate | undefined = includeFilesFromArgs
+        ? (filePath): boolean =>
+              includeFilesFromArgs.some((pattern) =>
+                  minimatch(filePath, pattern),
+              )
+        : includeFilesFromFile
+    const excludeFiles: FileMatchPredicate | undefined = excludeFilesFromArgs
+        ? (filePath): boolean =>
+              excludeFilesFromArgs.some(
+                  (pattern) =>
+                      console.log(
+                          pattern,
+                          filePath,
+                          minimatch(filePath, pattern),
+                      ) || minimatch(filePath, pattern),
+              )
+        : excludeFilesFromFile
+    const excludePackages:
+        | PackageMatchPredicate
+        | undefined = excludePackagesFromArgs
+        ? (packageName): boolean =>
+              excludePackagesFromArgs.includes(packageName)
+        : excludePackagesFromFile
     return {
-        include: new Set(mergedIncludes.length ? mergedIncludes : ['**/**']),
-        exclude: new Set([...excludesFromFile, ...excludesFromArgs]),
+        includeFiles: includeFiles ?? ((): boolean => true),
+        excludeFiles: excludeFiles ?? ((): boolean => false),
+        excludePackages: excludePackages ?? ((): boolean => false),
         fix: args.fix ?? false,
     }
 }
@@ -46,12 +78,37 @@ async function maybeGetConfigurationFromFile(
     cwd: string,
 ): Promise<Partial<AnalysisConfiguration>> {
     try {
-        const configurationFromFile = await fs.readFile(
-            resolve(cwd, '.ghostImports.json'),
-            { encoding: 'utf8' },
+        const configurationFilePath = require.resolve(
+            'ghost-imports.config.js',
+            {
+                paths: [cwd],
+            },
         )
-        const parsedConfiguration = JSON.parse(configurationFromFile)
-        return parsedConfiguration
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const configuration = require(configurationFilePath) || {}
+
+        const { includeFiles, excludeFiles, excludePackages } = configuration
+        const includeFilesFromConfig =
+            typeof includeFiles === 'function'
+                ? includeFiles
+                : (filename: string): boolean => includeFiles.contains(filename)
+
+        const excludeFilesFromConfig =
+            typeof excludeFiles === 'function'
+                ? excludeFiles
+                : (filename: string): boolean => excludeFiles.contains(filename)
+
+        const excludePackagesFromConfig =
+            typeof excludePackages === 'function'
+                ? excludePackages
+                : (filename: string): boolean =>
+                      excludePackages?.contains(filename) ?? false
+
+        return {
+            includeFiles: includeFilesFromConfig,
+            excludeFiles: excludeFilesFromConfig,
+            excludePackages: excludePackagesFromConfig,
+        }
     } catch (e) {
         /* Configuration unavailable */
         return {}

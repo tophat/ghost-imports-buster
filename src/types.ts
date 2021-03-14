@@ -6,6 +6,10 @@ import {
     Workspace,
 } from '@yarnpkg/core'
 
+export type FileMatchPredicate = (filename: string) => boolean
+
+export type PackageMatchPredicate = (packageName: string) => boolean
+
 export interface Context {
     configuration: Configuration
     project: Project
@@ -13,8 +17,9 @@ export interface Context {
 }
 
 export interface AnalysisConfiguration {
-    include: Set<string>
-    exclude: Set<string>
+    includeFiles: FileMatchPredicate
+    excludeFiles: FileMatchPredicate
+    excludePackages: PackageMatchPredicate
     fix: boolean
 }
 
@@ -37,8 +42,9 @@ export type PackageResolutions = Map<string, string>
 
 export interface Arguments {
     cwd?: string
-    include?: string[]
-    exclude?: string[]
+    includeFiles?: string[]
+    excludeFiles?: string[]
+    excludePackages?: string[]
     fix?: boolean
 }
 

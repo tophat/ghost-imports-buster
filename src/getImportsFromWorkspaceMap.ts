@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import { join } from 'path'
 import Module from 'module'
 
-import minimatch from 'minimatch'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { Workspace, structUtils } from '@yarnpkg/core'
@@ -138,18 +137,10 @@ async function collectPaths(
     root: string,
 ): Promise<Set<string>> {
     const rootStat = await fs.stat(root)
+    const isIncluded = configuration.includeFiles(root)
+    const isExcluded = configuration.excludeFiles(root)
 
     if (!rootStat.isDirectory()) {
-        const isIncluded = [
-            ...configuration.include,
-        ].some((includedGlob): boolean => minimatch(join(root), includedGlob))
-
-        const isExcluded = [
-            ...configuration.exclude,
-        ].some((excludedGlob: string): boolean =>
-            minimatch(join(root), excludedGlob),
-        )
-
         return root.match(/\.(j|t)sx?$/) && isIncluded && !isExcluded
             ? new Set([root])
             : new Set()

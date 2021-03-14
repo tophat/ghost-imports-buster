@@ -10,13 +10,17 @@ const argv = yargs(process.argv.slice(2))
         type: 'string',
         description: 'Project root',
     })
-    .option('include', {
+    .option('includeFiles', {
         type: 'array',
         description: 'Paths to include in the analysis',
     })
-    .option('exclude', {
+    .option('excludeFiles', {
         type: 'array',
         description: 'Paths to exclude from the analysis',
+    })
+    .option('excludePackages', {
+        type: 'array',
+        description: 'Package names to exclude from the analysis',
     })
     .option('fix', {
         type: 'boolean',
@@ -25,8 +29,9 @@ const argv = yargs(process.argv.slice(2))
 
 validateDependencies({
     cwd: argv.cwd,
-    include: argv.include as string[],
-    exclude: argv.exclude as string[],
+    includeFiles: argv.includeFies as string[],
+    excludeFiles: argv.excludeFiles as string[],
+    excludePackages: argv.excludePackages as string[],
     fix: argv.fix,
 }).catch((e) => {
     console.log(e)
