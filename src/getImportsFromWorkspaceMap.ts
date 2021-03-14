@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { join } from 'path'
+import path from 'path'
 import Module from 'module'
 
 import { parse } from '@babel/parser'
@@ -39,12 +39,6 @@ async function collectImportsFromWorkspace(
     const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
 
     const workspaceRoot = workspace.cwd
-    const workspacePaths = await collectPaths(
-        configuration,
-        workspace,
-        workspaceRoot,
-    )
-
     const imports: Set<ImportRecord> = new Set()
 
     // match up until path specifier (a "/" not used for scope):
@@ -80,7 +74,11 @@ async function collectImportsFromWorkspace(
         })
     }
 
-    for (const importedFrom of workspacePaths) {
+    for await (const importedFrom of collectPaths(
+        configuration,
+        workspace,
+        workspaceRoot,
+    )) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
         const ast = parse(content, {
             plugins: ['typescript'],
@@ -131,24 +129,25 @@ async function collectImportsFromWorkspace(
     return imports
 }
 
-async function collectPaths(
+async function* collectPaths(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
-    root: string,
-): Promise<Set<string>> {
-    const rootStat = await fs.stat(root)
-    const isIncluded = configuration.includeFiles(root)
-    const isExcluded = configuration.excludeFiles(root)
+    filename: string,
+): AsyncIterable<string> {
+    const basename = path.basename(filename)
+    const stat = await fs.stat(filename)
 
-    if (!rootStat.isDirectory()) {
-        return root.match(/\.(j|t)sx?$/) && isIncluded && !isExcluded
-            ? new Set([root])
-            : new Set()
+    if (
+        !configuration.includeFiles(filename) ||
+        basename.startsWith('.') ||
+        configuration.excludeFiles(filename)
+    ) {
+        return
     }
 
     // if dir belongs to another workspace, don't return any files
     const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
-        npath.toPortablePath(root),
+        npath.toPortablePath(filename),
     )
     if (
         !discoveredWorkspace ||
@@ -157,20 +156,18 @@ async function collectPaths(
             workspace.anchoredDescriptor,
         )
     ) {
-        return new Set()
+        return
     }
 
-    const directoryListing = await fs.readdir(root)
-    const collectedPaths = []
-    for (const current of directoryListing) {
-        collectedPaths.push(
-            ...(await collectPaths(
+    if (stat.isDirectory()) {
+        for (const childFilename of await fs.readdir(filename)) {
+            yield* collectPaths(
                 configuration,
                 workspace,
-                join(root, current),
-            )),
-        )
+                path.join(filename, childFilename),
+            )
+        }
+    } else if (basename.match(/\.(j|t)sx?$/)) {
+        yield filename
     }
-
-    return new Set(collectedPaths)
 }

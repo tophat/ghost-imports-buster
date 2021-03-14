@@ -1,4 +1,11 @@
-import { Descriptor, IdentHash, LocatorHash, Workspace } from '@yarnpkg/core'
+import {
+    Descriptor,
+    Ident,
+    IdentHash,
+    LocatorHash,
+    Workspace,
+    structUtils,
+} from '@yarnpkg/core'
 
 import { Context, DependenciesMap } from './types'
 
@@ -14,6 +21,7 @@ async function getTransitivePeerDependencies(
         ...manifest.getForScope('peerDependencies').values(),
     ]
         .map((descriptor) =>
+            // TODO: not storedResolutions
             workspace.project.storedResolutions.get(descriptor.descriptorHash),
         )
         .filter((hash: LocatorHash | undefined): hash is LocatorHash =>
@@ -32,6 +40,41 @@ async function getTransitivePeerDependencies(
     return transitivePeerDeps
 }
 
+async function getBinaries(
+    workspace: Workspace,
+): Promise<Map<IdentHash, Ident>> {
+    const binaries = new Map<IdentHash, Ident>()
+
+    if (
+        !structUtils.areDescriptorsEqual(
+            workspace.anchoredDescriptor,
+            workspace.project.topLevelWorkspace.anchoredDescriptor,
+        )
+    ) {
+        return binaries
+    }
+
+    const manifest = workspace.manifest
+    const locatorHashes = [
+        ...manifest.getForScope('dependencies').values(),
+        ...manifest.getForScope('devDependencies').values(),
+    ]
+        .map((descriptor) =>
+            // TODO: not storedResolutions
+            workspace.project.storedResolutions.get(descriptor.descriptorHash),
+        )
+        .filter((hash: LocatorHash | undefined): hash is LocatorHash =>
+            Boolean(hash),
+        )
+
+    for (const locatorHash of locatorHashes) {
+        const pkg = workspace.project.originalPackages.get(locatorHash)
+        if (pkg?.bin.size) binaries.set(pkg.identHash, pkg)
+    }
+
+    return binaries
+}
+
 export default async function getDependenciesByWorkspaceMap(
     context: Context,
 ): Promise<Map<Workspace, DependenciesMap>> {
@@ -46,6 +89,7 @@ export default async function getDependenciesByWorkspaceMap(
             transitivePeerDependencies: await getTransitivePeerDependencies(
                 workspace,
             ),
+            binaries: await getBinaries(workspace),
         })
     }
 

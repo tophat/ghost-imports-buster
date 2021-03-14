@@ -1,6 +1,7 @@
 import {
     Configuration,
     Descriptor,
+    Ident,
     IdentHash,
     Project,
     Workspace,
@@ -36,6 +37,7 @@ export interface DependenciesMap {
     devDependencies: Map<IdentHash, Descriptor>
     peerDependencies: Map<IdentHash, Descriptor>
     transitivePeerDependencies: Map<IdentHash, Descriptor>
+    binaries: Map<IdentHash, Ident>
 }
 
 export type PackageResolutions = Map<string, string>

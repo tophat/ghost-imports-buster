@@ -131,15 +131,23 @@ function getUnusedDependencies(
             continue
         }
 
-        if (importsUsage.get(dependencyName)?.size) continue
-
+        if (
+            importsUsage.has(dependencyName) ||
+            dependenciesMap.binaries.has(dependencyDescriptor.identHash)
+        ) {
+            continue
+        }
         unusedDependencies.add(dependencyName)
     }
     for (const dependencyDescriptor of dependenciesMap.devDependencies.values()) {
         const dependencyName = structUtils.stringifyIdent(dependencyDescriptor)
         // Unused if devSet[dependency] is empty
-        if (devImportsUsage?.get(dependencyName)?.size) continue
-
+        if (
+            devImportsUsage?.has(dependencyName) ||
+            dependenciesMap.binaries.has(dependencyDescriptor.identHash)
+        ) {
+            continue
+        }
         unusedDependencies.add(dependencyName)
     }
 

@@ -3,7 +3,7 @@ import { resolve } from 'path'
 import minimatch from 'minimatch'
 import { Configuration, Project } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
-import { PortablePath } from '@yarnpkg/fslib'
+import { PortablePath, npath } from '@yarnpkg/fslib'
 
 import {
     AnalysisConfiguration,
@@ -37,13 +37,8 @@ export async function getConfiguration(
         : includeFilesFromFile
     const excludeFiles: FileMatchPredicate | undefined = excludeFilesFromArgs
         ? (filePath): boolean =>
-              excludeFilesFromArgs.some(
-                  (pattern) =>
-                      console.log(
-                          pattern,
-                          filePath,
-                          minimatch(filePath, pattern),
-                      ) || minimatch(filePath, pattern),
+              excludeFilesFromArgs.some((pattern) =>
+                  minimatch(filePath, pattern),
               )
         : excludeFilesFromFile
     const excludePackages:
@@ -79,7 +74,7 @@ async function maybeGetConfigurationFromFile(
 ): Promise<Partial<AnalysisConfiguration>> {
     try {
         const configurationFilePath = require.resolve(
-            'ghost-imports.config.js',
+            npath.toPortablePath('./ghost-imports.config.js'),
             {
                 paths: [cwd],
             },
@@ -91,18 +86,24 @@ async function maybeGetConfigurationFromFile(
         const includeFilesFromConfig =
             typeof includeFiles === 'function'
                 ? includeFiles
-                : (filename: string): boolean => includeFiles.contains(filename)
+                : (filename: string): boolean =>
+                      includeFiles?.some?.((pattern: string) =>
+                          minimatch(filename, pattern),
+                      ) ?? true
 
         const excludeFilesFromConfig =
             typeof excludeFiles === 'function'
                 ? excludeFiles
-                : (filename: string): boolean => excludeFiles.contains(filename)
+                : (filename: string): boolean =>
+                      excludeFiles?.some?.((pattern: string) =>
+                          minimatch(filename, pattern),
+                      ) ?? true
 
         const excludePackagesFromConfig =
             typeof excludePackages === 'function'
                 ? excludePackages
                 : (filename: string): boolean =>
-                      excludePackages?.contains(filename) ?? false
+                      excludePackages?.includes?.(filename) ?? false
 
         return {
             includeFiles: includeFilesFromConfig,
