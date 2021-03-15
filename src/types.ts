@@ -24,6 +24,7 @@ export interface AnalysisConfiguration {
     devFiles: FileMatchPredicate
     excludePackages: PackageMatchPredicate
     fix: boolean
+    skipRoot: boolean
 }
 
 export interface ImportRecord {
@@ -51,6 +52,7 @@ export interface Arguments {
     devFiles?: string[]
     excludePackages?: string[]
     fix?: boolean
+    skipRoot?: boolean
 }
 
 export interface DiffReport {

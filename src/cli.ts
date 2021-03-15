@@ -22,6 +22,14 @@ const argv = yargs(process.argv.slice(2))
         type: 'array',
         description: 'Package names to exclude from the analysis',
     })
+    .option('devFiles', {
+        type: 'array',
+        description: 'Paths to mark as dev files',
+    })
+    .option('skipRoot', {
+        type: 'boolean',
+        description: 'Whether to skip over root workspace',
+    })
     .option('fix', {
         type: 'boolean',
         description: 'Attempt to fix package.json based on analysis',
@@ -31,8 +39,10 @@ validateDependencies({
     cwd: argv.cwd,
     includeFiles: argv.includeFies as string[],
     excludeFiles: argv.excludeFiles as string[],
+    devFiles: argv.devFiles as string[],
     excludePackages: argv.excludePackages as string[],
     fix: argv.fix,
+    skipRoot: argv.skipRoot,
 }).catch((e) => {
     console.log(e)
     process.exit(1)

@@ -63,10 +63,14 @@ export async function getConfiguration(
         excludePackages: excludePackages ?? ((): boolean => false),
         devFiles: devFiles ?? ((): boolean => false),
         fix: args.fix ?? false,
+        skipRoot: args.skipRoot ?? false,
     }
 }
 
-export async function getContext(cwd?: string): Promise<Context> {
+export async function getContext(
+    analysisConfig: AnalysisConfiguration,
+    cwd?: string,
+): Promise<Context> {
     const fullCwd = npath.toPortablePath(getFullCwd(cwd))
     const configuration = await Configuration.find(
         fullCwd,
@@ -81,7 +85,16 @@ export async function getContext(cwd?: string): Promise<Context> {
     )
     const workspaceCwds = new Set(
         isTopLevelWorkspace
-            ? project.workspaces.map((w) => w.cwd)
+            ? project.workspaces
+                  .filter((w) =>
+                      analysisConfig.skipRoot
+                          ? !structUtils.areDescriptorsEqual(
+                                w.anchoredDescriptor,
+                                w.project.topLevelWorkspace.anchoredDescriptor,
+                            )
+                          : w,
+                  )
+                  .map((w) => w.cwd)
             : [workspace.cwd],
     )
 
