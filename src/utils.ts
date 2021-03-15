@@ -24,10 +24,12 @@ export async function getConfiguration(
     const includeFilesFromFile = configurationFromFile.includeFiles
     const excludeFilesFromFile = configurationFromFile.excludeFiles
     const excludePackagesFromFile = configurationFromFile.excludePackages
+    const devFilesFromFile = configurationFromFile.devFiles
 
     const includeFilesFromArgs = args.includeFiles
     const excludeFilesFromArgs = args.excludeFiles
     const excludePackagesFromArgs = args.excludePackages
+    const devFilesFromArgs = args.devFiles
 
     const includeFiles: FileMatchPredicate | undefined = includeFilesFromArgs
         ? (filePath): boolean =>
@@ -35,22 +37,31 @@ export async function getConfiguration(
                   minimatch(filePath, pattern),
               )
         : includeFilesFromFile
+
     const excludeFiles: FileMatchPredicate | undefined = excludeFilesFromArgs
         ? (filePath): boolean =>
               excludeFilesFromArgs.some((pattern) =>
                   minimatch(filePath, pattern),
               )
         : excludeFilesFromFile
+
     const excludePackages:
         | PackageMatchPredicate
         | undefined = excludePackagesFromArgs
         ? (packageName): boolean =>
               excludePackagesFromArgs.includes(packageName)
         : excludePackagesFromFile
+
+    const devFiles: FileMatchPredicate | undefined = devFilesFromArgs
+        ? (filePath): boolean =>
+              devFilesFromArgs.some((pattern) => minimatch(filePath, pattern))
+        : devFilesFromFile
+
     return {
         includeFiles: includeFiles ?? ((): boolean => true),
         excludeFiles: excludeFiles ?? ((): boolean => false),
         excludePackages: excludePackages ?? ((): boolean => false),
+        devFiles: devFiles ?? ((): boolean => false),
         fix: args.fix ?? false,
     }
 }
@@ -93,7 +104,12 @@ async function maybeGetConfigurationFromFile(
         )
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const configuration = require(configurationFilePath) || {}
-        const { includeFiles, excludeFiles, excludePackages } = configuration
+        const {
+            includeFiles,
+            excludeFiles,
+            excludePackages,
+            devFiles,
+        } = configuration
         const includeFilesFromConfig =
             typeof includeFiles === 'function'
                 ? includeFiles
@@ -110,6 +126,19 @@ async function maybeGetConfigurationFromFile(
                           minimatch(filename, pattern),
                       ) ?? false
 
+        const defaultDevFiles = (filename: string): boolean =>
+            ['**/__tests__/**', '**/tests/**', '**/*.test.*'].some((pattern) =>
+                minimatch(filename, pattern),
+            )
+
+        const devFilesFromConfig =
+            typeof devFiles === 'function'
+                ? devFiles
+                : (filename: string): boolean =>
+                      devFiles?.some?.((pattern: string) =>
+                          minimatch(filename, pattern),
+                      ) ?? defaultDevFiles(filename)
+
         const excludePackagesFromConfig =
             typeof excludePackages === 'function'
                 ? excludePackages
@@ -120,6 +149,7 @@ async function maybeGetConfigurationFromFile(
             includeFiles: includeFilesFromConfig,
             excludeFiles: excludeFilesFromConfig,
             excludePackages: excludePackagesFromConfig,
+            devFiles: devFilesFromConfig,
         }
     } catch (e) {
         /* Configuration unavailable */

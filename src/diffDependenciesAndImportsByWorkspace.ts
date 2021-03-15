@@ -1,5 +1,3 @@
-import path from 'path'
-
 import { Workspace, structUtils } from '@yarnpkg/core'
 
 import {
@@ -33,11 +31,13 @@ export default function diffDependenciesAndImportsByWorkspace(
         if (!workspaceDependencies || !workspaceImports) continue
 
         const undeclaredDependencies = getUndeclaredDependencies(
+            configuration,
             workspaceDependencies,
             workspaceImports,
         )
         const unusedDependencies = getUnusedDependencies(
             configuration,
+            workspace,
             workspaceDependencies,
             workspaceImports,
         )
@@ -52,19 +52,8 @@ export default function diffDependenciesAndImportsByWorkspace(
     }
 }
 
-// TODO: allow customization over default
-function isDevFile(filename: string): boolean {
-    const parts = filename.split(path.sep)
-    if (parts.some((p) => ['__tests__', 'tests'].includes(p))) {
-        return true
-    }
-    if (filename.includes('.test.')) {
-        return true
-    }
-    return false
-}
-
 function getUndeclaredDependencies(
+    configuration: AnalysisConfiguration,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
 ): Set<string> {
@@ -82,13 +71,13 @@ function getUndeclaredDependencies(
 
         if (
             dependenciesMap.devDependencies.has(identHash) &&
-            isDevFile(importedFrom)
+            configuration.devFiles(importedFrom)
         )
             continue
 
         if (
             dependenciesMap.peerDependencies.has(identHash) &&
-            !isDevFile(importedFrom)
+            !configuration.devFiles(importedFrom)
         )
             continue
 
@@ -103,6 +92,7 @@ function getUndeclaredDependencies(
 
 function getUnusedDependencies(
     configuration: AnalysisConfiguration,
+    workspace: Workspace,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
 ): Set<string> {
@@ -112,7 +102,7 @@ function getUnusedDependencies(
     const devImportsUsage = new Map<string, Set<string>>()
 
     for (const { imported, importedFrom } of imports.values()) {
-        if (isDevFile(importedFrom)) {
+        if (configuration.devFiles(importedFrom)) {
             const devSet = devImportsUsage.get(imported) ?? new Set<string>()
             devImportsUsage.set(imported, devSet)
             devSet.add(importedFrom)
@@ -158,7 +148,7 @@ function getUnusedDependencies(
 
         // Unused if devSet[dependency] is empty
         if (
-            devImportsUsage?.has(dependencyName) ||
+            devImportsUsage.has(dependencyName) ||
             dependenciesMap.binaries.has(dependencyDescriptor.identHash) ||
             configuration.excludePackages(dependencyName)
         ) {

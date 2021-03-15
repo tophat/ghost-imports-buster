@@ -21,6 +21,7 @@ export interface Context {
 export interface AnalysisConfiguration {
     includeFiles: FileMatchPredicate
     excludeFiles: FileMatchPredicate
+    devFiles: FileMatchPredicate
     excludePackages: PackageMatchPredicate
     fix: boolean
 }
@@ -47,6 +48,7 @@ export interface Arguments {
     cwd?: string
     includeFiles?: string[]
     excludeFiles?: string[]
+    devFiles?: string[]
     excludePackages?: string[]
     fix?: boolean
 }
