@@ -21,8 +21,10 @@ export interface Context {
 export interface AnalysisConfiguration {
     includeFiles: FileMatchPredicate
     excludeFiles: FileMatchPredicate
+    devFiles: FileMatchPredicate
     excludePackages: PackageMatchPredicate
     fix: boolean
+    skipRoot: boolean
 }
 
 export interface ImportRecord {
@@ -47,8 +49,10 @@ export interface Arguments {
     cwd?: string
     includeFiles?: string[]
     excludeFiles?: string[]
+    devFiles?: string[]
     excludePackages?: string[]
     fix?: boolean
+    skipRoot?: boolean
 }
 
 export interface DiffReport {

@@ -86,12 +86,24 @@ async function collectImportsFromWorkspace(
             sourceType: 'module',
         })
 
+        const skipLines = new Set<number>()
+
+        for (const comment of ast.comments ?? []) {
+            if (comment.value.trim() === 'ghost-imports-ignore-next-line') {
+                skipLines.add(comment.loc.end.line + 1)
+            }
+        }
+
         traverse(ast, {
             ImportDeclaration: function (path) {
+                if (skipLines.has(path.node.loc?.start.line ?? -1)) return
+
                 const imported = path.node.source.value
                 visitPath({ importedFrom, imported })
             },
             CallExpression: function (path) {
+                if (skipLines.has(path.node.loc?.start.line ?? -1)) return
+
                 const predicates = [
                     // syntax:
                     //    require('pkg')
