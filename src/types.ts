@@ -19,9 +19,9 @@ export interface Context {
 }
 
 export interface AnalysisConfiguration {
-    includeFiles: FileMatchPredicate
-    excludeFiles: FileMatchPredicate
-    devFiles: FileMatchPredicate
+    includeFiles: string[] //FileMatchPredicate
+    excludeFiles: string[] //FileMatchPredicate
+    devFiles: string[] //FileMatchPredicate
     excludePackages: PackageMatchPredicate
     fix: boolean
     skipRoot: boolean

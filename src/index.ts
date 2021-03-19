@@ -22,7 +22,7 @@ export default async function validateDependencies(
     const importsMap = await getImportsByWorkspaceMap(context, configuration)
 
     // Diff dependencies and imports by workspace
-    const diffReport = diffDependenciesAndImportsByWorkspace(
+    const diffReport = await diffDependenciesAndImportsByWorkspace(
         context,
         configuration,
         dependenciesMap,
@@ -45,7 +45,7 @@ export default async function validateDependencies(
         undeclaredDependencies: diffReport.undeclared,
         unusedDependencies: diffReport.unused,
     }
-
+    console.log(report)
     printReport(report)
     if (configuration.fix) await fixWorkspaces(context, diffReport)
 

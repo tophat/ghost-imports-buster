@@ -6,6 +6,7 @@ import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { Workspace, structUtils } from '@yarnpkg/core'
 import { npath } from '@yarnpkg/fslib'
+import fastGlob from 'fast-glob'
 
 import {
     AnalysisConfiguration,
@@ -39,7 +40,6 @@ async function collectImportsFromWorkspace(
 ): Promise<Set<ImportRecord>> {
     if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
     const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
-    const workspaceRoot = workspace.cwd
     const imports: Set<ImportRecord> = new Set()
 
     // match up until path specifier (a "/" not used for scope):
@@ -75,11 +75,7 @@ async function collectImportsFromWorkspace(
         })
     }
 
-    for await (const importedFrom of collectPaths(
-        configuration,
-        workspace,
-        workspaceRoot,
-    )) {
+    for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
         const ast = parse(content, {
             plugins: ['typescript'],
@@ -145,11 +141,40 @@ async function collectImportsFromWorkspace(
 async function* collectPaths(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
-    filename: string,
 ): AsyncIterable<string> {
-    const basename = path.basename(filename)
-    const stat = await fs.stat(filename)
+    //const basename = path.basename(filename)
+    //const stat = await fs.stat(filename)
 
+    /*const excludes = configuration.excludeFiles.map(
+        (patt: string) => `!${patt}`,
+    )*/
+    const includes = configuration.includeFiles
+
+    const patterns = [...includes]
+
+    const paths = await fastGlob(patterns, {
+        absolute: true,
+        ignore: configuration.excludeFiles,
+        cwd: workspace.cwd,
+    })
+
+    for (const filepath of paths) {
+        const basename = path.basename(filepath)
+        if (basename.startsWith('.')) continue
+        const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
+            npath.toPortablePath(filepath),
+        )
+        if (
+            !discoveredWorkspace ||
+            !structUtils.areDescriptorsEqual(
+                discoveredWorkspace.anchoredDescriptor,
+                workspace.anchoredDescriptor,
+            )
+        )
+            continue
+        if (basename.match(/\.(j|t)sx?$/)) yield filepath
+    }
+    /*
     if (basename.startsWith('.')) return
 
     if (
@@ -185,4 +210,5 @@ async function* collectPaths(
     } else if (basename.match(/\.(j|t)sx?$/)) {
         yield filename
     }
+    */
 }

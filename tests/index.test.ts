@@ -142,7 +142,6 @@ describe('GhostImports', () => {
                     const report = await validateDependencies({
                         cwd: projectRoot,
                     })
-
                     expect(
                         report.unusedDependencies.get('pkg-1')?.size,
                     ).toEqual(0)

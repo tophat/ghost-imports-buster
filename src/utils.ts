@@ -1,6 +1,6 @@
 import { resolve } from 'path'
 
-import minimatch from 'minimatch'
+//import minimatch from 'minimatch'
 import { Configuration, Project, structUtils } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
 import { npath } from '@yarnpkg/fslib'
@@ -9,7 +9,7 @@ import {
     AnalysisConfiguration,
     Arguments,
     Context,
-    FileMatchPredicate,
+    //    FileMatchPredicate,
     PackageMatchPredicate,
 } from './types'
 
@@ -31,6 +31,16 @@ export async function getConfiguration(
     const excludePackagesFromArgs = args.excludePackages
     const devFilesFromArgs = args.devFiles
 
+    const includeFiles = (includeFilesFromArgs || includeFilesFromFile) ?? [
+        '**/*',
+    ]
+    const excludeFiles = (excludeFilesFromArgs || excludeFilesFromFile) ?? []
+    const devFiles = (devFilesFromArgs || devFilesFromFile) ?? [
+        '**/__tests__/**',
+        '**/tests/**',
+        '**/*.test.*',
+    ]
+    /*
     const includeFiles: FileMatchPredicate | undefined = includeFilesFromArgs
         ? (filePath): boolean =>
               includeFilesFromArgs.some((pattern) =>
@@ -44,7 +54,7 @@ export async function getConfiguration(
                   minimatch(filePath, pattern),
               )
         : excludeFilesFromFile
-
+    */
     const excludePackages:
         | PackageMatchPredicate
         | undefined = excludePackagesFromArgs
@@ -52,16 +62,18 @@ export async function getConfiguration(
               excludePackagesFromArgs.includes(packageName)
         : excludePackagesFromFile
 
+    /*
     const devFiles: FileMatchPredicate | undefined = devFilesFromArgs
         ? (filePath): boolean =>
               devFilesFromArgs.some((pattern) => minimatch(filePath, pattern))
         : devFilesFromFile
+    */
 
     return {
-        includeFiles: includeFiles ?? ((): boolean => true),
-        excludeFiles: excludeFiles ?? ((): boolean => false),
+        includeFiles, //: includeFiles ?? ((): boolean => true),
+        excludeFiles, //: excludeFiles ?? ((): boolean => false),
         excludePackages: excludePackages ?? ((): boolean => false),
-        devFiles: devFiles ?? ((): boolean => false),
+        devFiles, //: devFiles ?? ((): boolean => false),
         fix: args.fix ?? false,
         skipRoot: args.skipRoot ?? false,
     }
@@ -123,6 +135,7 @@ async function maybeGetConfigurationFromFile(
             excludePackages,
             devFiles,
         } = configuration
+        /*
         const includeFilesFromConfig =
             typeof includeFiles === 'function'
                 ? includeFiles
@@ -138,19 +151,20 @@ async function maybeGetConfigurationFromFile(
                       excludeFiles?.some?.((pattern: string) =>
                           minimatch(filename, pattern),
                       ) ?? false
+                     */
 
-        const defaultDevFiles = (filename: string): boolean =>
-            ['**/__tests__/**', '**/tests/**', '**/*.test.*'].some((pattern) =>
-                minimatch(filename, pattern),
-            )
+        //const defaultDevFiles = (filename: string): boolean =>
+        //   ['**/__tests__/**', '**/tests/**', '**/*.test.*'].some((pattern) =>
+        //      minimatch(filename, pattern),
+        //  )
 
-        const devFilesFromConfig =
-            typeof devFiles === 'function'
-                ? devFiles
-                : (filename: string): boolean =>
-                      devFiles?.some?.((pattern: string) =>
-                          minimatch(filename, pattern),
-                      ) ?? defaultDevFiles(filename)
+        //const devFilesFromConfig =
+        //   typeof devFiles === 'function'
+        //        ? devFiles
+        //       : (filename: string): boolean =>
+        //             devFiles?.some?.((pattern: string) =>
+        //                 minimatch(filename, pattern),
+        //             ) ?? defaultDevFiles(filename)
 
         const excludePackagesFromConfig =
             typeof excludePackages === 'function'
@@ -159,10 +173,10 @@ async function maybeGetConfigurationFromFile(
                       excludePackages?.includes?.(filename) ?? false
 
         return {
-            includeFiles: includeFilesFromConfig,
-            excludeFiles: excludeFilesFromConfig,
+            includeFiles, //: includeFilesFromConfig,
+            excludeFiles, //: excludeFilesFromConfig,
             excludePackages: excludePackagesFromConfig,
-            devFiles: devFilesFromConfig,
+            devFiles, //: devFilesFromConfig,
         }
     } catch (e) {
         /* Configuration unavailable */
