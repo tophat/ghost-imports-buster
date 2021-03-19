@@ -1,4 +1,5 @@
 import { Workspace, structUtils } from '@yarnpkg/core'
+import fastGlob from 'fast-glob'
 
 import {
     AnalysisConfiguration,
@@ -9,12 +10,12 @@ import {
     ImportRecordsByWorkspaceMap,
 } from './types'
 
-export default function diffDependenciesAndImportsByWorkspace(
+export default async function diffDependenciesAndImportsByWorkspace(
     context: Context,
     configuration: AnalysisConfiguration,
     dependenciesMap: Map<Workspace, DependenciesMap>,
     importsMap: ImportRecordsByWorkspaceMap,
-): DiffReport {
+): Promise<DiffReport> {
     const { workspaces } = context.project
     const undeclaredDependenciesMap = new Map()
     const unusedDependenciesMap = new Map()
@@ -30,12 +31,13 @@ export default function diffDependenciesAndImportsByWorkspace(
 
         if (!workspaceDependencies || !workspaceImports) continue
 
-        const undeclaredDependencies = getUndeclaredDependencies(
+        const undeclaredDependencies = await getUndeclaredDependencies(
             configuration,
+            workspace,
             workspaceDependencies,
             workspaceImports,
         )
-        const unusedDependencies = getUnusedDependencies(
+        const unusedDependencies = await getUnusedDependencies(
             configuration,
             workspace,
             workspaceDependencies,
@@ -52,13 +54,16 @@ export default function diffDependenciesAndImportsByWorkspace(
     }
 }
 
-function getUndeclaredDependencies(
+async function getUndeclaredDependencies(
     configuration: AnalysisConfiguration,
+    workspace: Workspace,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
-): Set<string> {
+): Promise<Set<string>> {
     const undeclaredDependencies: Set<string> = new Set()
-
+    const devFiles = await fastGlob(configuration.devFiles, {
+        cwd: workspace.cwd,
+    })
     for (const { imported, importedFrom } of imports) {
         const importedIdent = structUtils.parseIdent(imported)
         const identHash = importedIdent.identHash
@@ -71,13 +76,13 @@ function getUndeclaredDependencies(
 
         if (
             dependenciesMap.devDependencies.has(identHash) &&
-            configuration.devFiles(importedFrom)
+            devFiles.includes(importedFrom)
         )
             continue
 
         if (
             dependenciesMap.peerDependencies.has(identHash) &&
-            !configuration.devFiles(importedFrom)
+            !devFiles.includes(importedFrom)
         )
             continue
 
@@ -90,19 +95,21 @@ function getUndeclaredDependencies(
 // TODO
 //function getMovableDependencies(): void {}
 
-function getUnusedDependencies(
+async function getUnusedDependencies(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
-): Set<string> {
+): Promise<Set<string>> {
     const unusedDependencies: Set<string> = new Set()
 
     const importsUsage = new Map<string, Set<string>>()
     const devImportsUsage = new Map<string, Set<string>>()
-
+    const devFiles = await fastGlob(configuration.devFiles, {
+        cwd: workspace.cwd,
+    })
     for (const { imported, importedFrom } of imports.values()) {
-        if (configuration.devFiles(importedFrom)) {
+        if (devFiles.includes(importedFrom)) {
             const devSet = devImportsUsage.get(imported) ?? new Set<string>()
             devImportsUsage.set(imported, devSet)
             devSet.add(importedFrom)

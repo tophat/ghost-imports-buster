@@ -6,6 +6,7 @@ import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { Workspace, structUtils } from '@yarnpkg/core'
 import { npath } from '@yarnpkg/fslib'
+import fastGlob from 'fast-glob'
 
 import {
     AnalysisConfiguration,
@@ -39,7 +40,6 @@ async function collectImportsFromWorkspace(
 ): Promise<Set<ImportRecord>> {
     if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
     const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
-    const workspaceRoot = workspace.cwd
     const imports: Set<ImportRecord> = new Set()
 
     // match up until path specifier (a "/" not used for scope):
@@ -75,11 +75,7 @@ async function collectImportsFromWorkspace(
         })
     }
 
-    for await (const importedFrom of collectPaths(
-        configuration,
-        workspace,
-        workspaceRoot,
-    )) {
+    for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
         const ast = parse(content, {
             plugins: ['typescript'],
@@ -145,44 +141,30 @@ async function collectImportsFromWorkspace(
 async function* collectPaths(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
-    filename: string,
 ): AsyncIterable<string> {
-    const basename = path.basename(filename)
-    const stat = await fs.stat(filename)
+    const paths = await fastGlob(configuration.includeFiles, {
+        absolute: true,
+        ignore: configuration.excludeFiles,
+        cwd: workspace.cwd,
+    })
 
-    if (basename.startsWith('.')) return
-
-    if (
-        !stat.isDirectory() &&
-        (!configuration.includeFiles(filename) ||
-            configuration.excludeFiles(filename))
-    ) {
-        return
-    }
-
-    // if dir belongs to another workspace, don't return any files
-    const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
-        npath.toPortablePath(filename),
-    )
-    if (
-        !discoveredWorkspace ||
-        !structUtils.areDescriptorsEqual(
-            discoveredWorkspace.anchoredDescriptor,
-            workspace.anchoredDescriptor,
+    for (const filepath of paths) {
+        const basename = path.basename(filepath)
+        // Exclude if dotfile.
+        if (basename.startsWith('.')) continue
+        // Exclude if not part of the current workspace.
+        const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
+            npath.toPortablePath(filepath),
         )
-    ) {
-        return
-    }
-
-    if (stat.isDirectory()) {
-        for (const childFilename of await fs.readdir(filename)) {
-            yield* collectPaths(
-                configuration,
-                workspace,
-                path.join(filename, childFilename),
+        if (
+            !discoveredWorkspace ||
+            !structUtils.areDescriptorsEqual(
+                discoveredWorkspace.anchoredDescriptor,
+                workspace.anchoredDescriptor,
             )
-        }
-    } else if (basename.match(/\.(j|t)sx?$/)) {
-        yield filename
+        )
+            continue
+        // Include if ts/js source.
+        if (basename.match(/\.(j|t)sx?$/)) yield filepath
     }
 }

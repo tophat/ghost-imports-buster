@@ -65,7 +65,7 @@
     "@yarnpkg/plugin-npm": "^2.4.0",
     "@yarnpkg/plugin-pack": "^2.2.3",
     "chalk": "^4.1.0",
-    "minimatch": "^3.0.4",
+    "fast-glob": "^3.2.5",
     "yargs": "^16.2.0"
   },
   "lint-staged": {
