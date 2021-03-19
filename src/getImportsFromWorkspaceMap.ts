@@ -2,6 +2,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import Module from 'module'
 
+import { transformAsync } from '@babel/core'
 import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { Workspace, structUtils } from '@yarnpkg/core'
@@ -77,7 +78,10 @@ async function collectImportsFromWorkspace(
 
     for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
-        const ast = parse(content, {
+
+        const { code } = await transformAsync(content, { root: workspace.cwd })
+
+        const ast = parse(code, {
             plugins: ['typescript'],
             sourceType: 'module',
         })
