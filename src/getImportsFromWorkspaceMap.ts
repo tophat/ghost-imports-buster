@@ -3,7 +3,6 @@ import path from 'path'
 import Module from 'module'
 
 import { transformAsync } from '@babel/core'
-import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
 import { Workspace, structUtils } from '@yarnpkg/core'
 import { npath } from '@yarnpkg/fslib'
@@ -84,21 +83,14 @@ async function collectImportsFromWorkspace(
         const result = await transformAsync(content, {
             filename: importedFrom,
             root: context.project.cwd,
+            ast: true,
+            code: false,
         })
 
-        if (!result?.code) {
+        if (!result?.ast) {
             throw new Error(`Failed to transform ${importedFrom}`)
         }
-        // FIXME: refactor to cons
-        let ast
-        try {
-            ast = parse(result.code, {
-                sourceType: 'module',
-            })
-        } catch (e) {
-            console.error(`Failed to parse ${importedFrom}`)
-            throw e
-        }
+        const ast = result.ast
 
         const skipLines = new Set<number>()
 
