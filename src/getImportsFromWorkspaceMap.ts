@@ -28,6 +28,7 @@ export default async function getImportsByWorkspaceMap(
     for (const workspace of workspaces) {
         const collectedImports = await collectImportsFromWorkspace(
             configuration,
+            context,
             workspace,
         )
         importsMap.set(workspace, collectedImports)
@@ -37,6 +38,7 @@ export default async function getImportsByWorkspaceMap(
 
 async function collectImportsFromWorkspace(
     configuration: AnalysisConfiguration,
+    context: Context,
     workspace: Workspace,
 ): Promise<Set<ImportRecord>> {
     if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
@@ -79,12 +81,24 @@ async function collectImportsFromWorkspace(
     for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
 
-        const { code } = await transformAsync(content, { root: workspace.cwd })
-
-        const ast = parse(code, {
-            plugins: ['typescript'],
-            sourceType: 'module',
+        const result = await transformAsync(content, {
+            filename: importedFrom,
+            root: context.project.cwd,
         })
+
+        if (!result?.code) {
+            throw new Error(`Failed to transform ${importedFrom}`)
+        }
+        // FIXME: refactor to cons
+        let ast
+        try {
+            ast = parse(result.code, {
+                sourceType: 'module',
+            })
+        } catch (e) {
+            console.error(`Failed to parse ${importedFrom}`)
+            throw e
+        }
 
         const skipLines = new Set<number>()
 
