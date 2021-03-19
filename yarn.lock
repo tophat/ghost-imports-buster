@@ -1600,6 +1600,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/babel__core@npm:^7.1.13":
+  version: 7.1.13
+  resolution: "@types/babel__core@npm:7.1.13"
+  dependencies:
+    "@babel/parser": ^7.1.0
+    "@babel/types": ^7.0.0
+    "@types/babel__generator": "*"
+    "@types/babel__template": "*"
+    "@types/babel__traverse": "*"
+  checksum: 81ef28d05599962d1220791da3743d756057c457b39969c3c9aef958ee4289cf48a804647d0e9e3fbe140a61eca19a14129f1422f975d102bdf52f2d5e99ed0a
+  languageName: node
+  linkType: hard
+
 "@types/babel__generator@npm:*":
   version: 7.6.2
   resolution: "@types/babel__generator@npm:7.6.2"
@@ -4555,6 +4568,7 @@ __metadata:
     "@babel/traverse": ^7.13.0
     "@babel/types": ^7.13.0
     "@tophat/eslint-config": ^0.3.1
+    "@types/babel__core": ^7.1.13
     "@types/babel__traverse": ^7.11.1
     "@types/jest": ^26.0.20
     "@types/minimatch": ^3.0.3
