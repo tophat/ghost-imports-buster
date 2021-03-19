@@ -45,7 +45,6 @@ export default async function validateDependencies(
         undeclaredDependencies: diffReport.undeclared,
         unusedDependencies: diffReport.unused,
     }
-    console.log(report)
     printReport(report)
     if (configuration.fix) await fixWorkspaces(context, diffReport)
 
