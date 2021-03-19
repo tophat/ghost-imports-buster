@@ -142,17 +142,7 @@ async function* collectPaths(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
 ): AsyncIterable<string> {
-    //const basename = path.basename(filename)
-    //const stat = await fs.stat(filename)
-
-    /*const excludes = configuration.excludeFiles.map(
-        (patt: string) => `!${patt}`,
-    )*/
-    const includes = configuration.includeFiles
-
-    const patterns = [...includes]
-
-    const paths = await fastGlob(patterns, {
+    const paths = await fastGlob(configuration.includeFiles, {
         absolute: true,
         ignore: configuration.excludeFiles,
         cwd: workspace.cwd,
@@ -160,7 +150,9 @@ async function* collectPaths(
 
     for (const filepath of paths) {
         const basename = path.basename(filepath)
+        // Exclude if dotfile.
         if (basename.startsWith('.')) continue
+        // Exclude if not part of the current workspace.
         const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
             npath.toPortablePath(filepath),
         )
@@ -172,43 +164,7 @@ async function* collectPaths(
             )
         )
             continue
+        // Include if ts/js source.
         if (basename.match(/\.(j|t)sx?$/)) yield filepath
     }
-    /*
-    if (basename.startsWith('.')) return
-
-    if (
-        !stat.isDirectory() &&
-        (!configuration.includeFiles(filename) ||
-            configuration.excludeFiles(filename))
-    ) {
-        return
-    }
-
-    // if dir belongs to another workspace, don't return any files
-    const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
-        npath.toPortablePath(filename),
-    )
-    if (
-        !discoveredWorkspace ||
-        !structUtils.areDescriptorsEqual(
-            discoveredWorkspace.anchoredDescriptor,
-            workspace.anchoredDescriptor,
-        )
-    ) {
-        return
-    }
-
-    if (stat.isDirectory()) {
-        for (const childFilename of await fs.readdir(filename)) {
-            yield* collectPaths(
-                configuration,
-                workspace,
-                path.join(filename, childFilename),
-            )
-        }
-    } else if (basename.match(/\.(j|t)sx?$/)) {
-        yield filename
-    }
-    */
 }

@@ -7,8 +7,6 @@ import {
     Workspace,
 } from '@yarnpkg/core'
 
-export type FileMatchPredicate = (filename: string) => boolean
-
 export type PackageMatchPredicate = (packageName: string) => boolean
 
 export interface Context {
@@ -19,9 +17,9 @@ export interface Context {
 }
 
 export interface AnalysisConfiguration {
-    includeFiles: string[] //FileMatchPredicate
-    excludeFiles: string[] //FileMatchPredicate
-    devFiles: string[] //FileMatchPredicate
+    includeFiles: string[]
+    excludeFiles: string[]
+    devFiles: string[]
     excludePackages: PackageMatchPredicate
     fix: boolean
     skipRoot: boolean

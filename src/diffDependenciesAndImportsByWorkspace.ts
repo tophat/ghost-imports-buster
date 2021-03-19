@@ -76,13 +76,13 @@ async function getUndeclaredDependencies(
 
         if (
             dependenciesMap.devDependencies.has(identHash) &&
-            devFiles.includes(importedFrom) //configuration.devFiles(importedFrom)
+            devFiles.includes(importedFrom)
         )
             continue
 
         if (
             dependenciesMap.peerDependencies.has(identHash) &&
-            !devFiles.includes(importedFrom) //configuration.devFiles(importedFrom)
+            !devFiles.includes(importedFrom)
         )
             continue
 
@@ -109,11 +109,7 @@ async function getUnusedDependencies(
         cwd: workspace.cwd,
     })
     for (const { imported, importedFrom } of imports.values()) {
-        if (
-            devFiles.includes(
-                importedFrom,
-            ) /*configuration.devFiles(importedFrom)*/
-        ) {
+        if (devFiles.includes(importedFrom)) {
             const devSet = devImportsUsage.get(imported) ?? new Set<string>()
             devImportsUsage.set(imported, devSet)
             devSet.add(importedFrom)
