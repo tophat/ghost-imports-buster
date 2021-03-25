@@ -2,8 +2,8 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import Module from 'module'
 
-import { transformAsync } from '@babel/core'
 import traverse from '@babel/traverse'
+import { parse } from '@babel/parser'
 import { Workspace, structUtils } from '@yarnpkg/core'
 import { npath } from '@yarnpkg/fslib'
 import fastGlob from 'fast-glob'
@@ -33,6 +33,26 @@ export default async function getImportsByWorkspaceMap(
         importsMap.set(workspace, collectedImports)
     }
     return importsMap
+}
+
+async function parseContent(
+    content: string,
+    { sourceFilename }: { sourceFilename: string },
+): Promise<ReturnType<typeof parse>> {
+    return parse(content, {
+        allowAwaitOutsideFunction: true,
+        errorRecovery: true, // skip errors if possible
+        sourceType: 'module',
+        sourceFilename,
+        plugins: [
+            'classProperties',
+            'topLevelAwait',
+            'typescript',
+            'throwExpressions',
+            'jsx',
+            'exportDefaultFrom',
+        ],
+    })
 }
 
 async function collectImportsFromWorkspace(
@@ -80,17 +100,9 @@ async function collectImportsFromWorkspace(
     for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
 
-        const result = await transformAsync(content, {
-            filename: importedFrom,
-            root: context.project.cwd,
-            ast: true,
-            code: false,
+        const ast = await parseContent(content, {
+            sourceFilename: importedFrom,
         })
-
-        if (!result?.ast) {
-            throw new Error(`Failed to transform ${importedFrom}`)
-        }
-        const ast = result.ast
 
         const skipLines = new Set<number>()
 
