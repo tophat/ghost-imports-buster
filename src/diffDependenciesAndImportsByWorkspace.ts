@@ -1,4 +1,4 @@
-import { Workspace, structUtils } from '@yarnpkg/core'
+import { IdentHash, Workspace, structUtils } from '@yarnpkg/core'
 import fastGlob from 'fast-glob'
 
 import {
@@ -8,6 +8,7 @@ import {
     DiffReport,
     ImportRecord,
     ImportRecordsByWorkspaceMap,
+    UndeclaredDependencyMap,
 } from './types'
 
 export default async function diffDependenciesAndImportsByWorkspace(
@@ -17,8 +18,11 @@ export default async function diffDependenciesAndImportsByWorkspace(
     importsMap: ImportRecordsByWorkspaceMap,
 ): Promise<DiffReport> {
     const { workspaces } = context.project
-    const undeclaredDependenciesMap = new Map()
-    const unusedDependenciesMap = new Map()
+    const undeclaredDependenciesMap: Map<
+        string,
+        UndeclaredDependencyMap
+    > = new Map()
+    const unusedDependenciesMap: Map<string, Set<string>> = new Map()
     for (const workspace of workspaces) {
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
 
@@ -54,16 +58,54 @@ export default async function diffDependenciesAndImportsByWorkspace(
     }
 }
 
+async function guessDependencyType({
+    configuration,
+    dependenciesMap,
+    identHash,
+    previousGuesses,
+    packageName,
+    isInDevFile,
+}: {
+    configuration: AnalysisConfiguration
+    previousGuesses: UndeclaredDependencyMap
+    dependenciesMap: DependenciesMap
+    packageName: string
+    isInDevFile: boolean
+    identHash: IdentHash
+}): Promise<'dependencies' | 'devDependencies' | 'peerDependencies'> {
+    if (configuration.alwaysPeerDependencies(packageName)) {
+        return 'peerDependencies'
+    }
+
+    const previousGuess = previousGuesses.get(packageName)
+    if (previousGuess?.dependencyType === 'dependencies') {
+        return previousGuess?.dependencyType
+    }
+
+    if (isInDevFile) return 'devDependencies'
+
+    if (
+        !previousGuess &&
+        dependenciesMap.transitivePeerDependencies.has(identHash)
+    ) {
+        return 'peerDependencies'
+    }
+
+    return 'dependencies'
+}
+
 async function getUndeclaredDependencies(
     configuration: AnalysisConfiguration,
     workspace: Workspace,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
-): Promise<Set<string>> {
-    const undeclaredDependencies: Set<string> = new Set()
+): Promise<UndeclaredDependencyMap> {
+    const undeclaredDependencies: UndeclaredDependencyMap = new Map()
     const devFiles = await fastGlob(configuration.devFiles, {
         cwd: workspace.cwd,
+        absolute: true,
     })
+
     for (const { imported, importedFrom } of imports) {
         const importedIdent = structUtils.parseIdent(imported)
         const identHash = importedIdent.identHash
@@ -74,19 +116,23 @@ async function getUndeclaredDependencies(
 
         if (dependenciesMap.dependencies.has(identHash)) continue
 
-        if (
-            dependenciesMap.devDependencies.has(identHash) &&
-            devFiles.includes(importedFrom)
-        )
+        const isInDevFile = devFiles.includes(importedFrom)
+
+        if (dependenciesMap.devDependencies.has(identHash) && isInDevFile)
             continue
 
-        if (
-            dependenciesMap.peerDependencies.has(identHash) &&
-            !devFiles.includes(importedFrom)
-        )
+        if (dependenciesMap.peerDependencies.has(identHash) && !isInDevFile)
             continue
 
-        undeclaredDependencies.add(imported)
+        const dependencyType = await guessDependencyType({
+            previousGuesses: undeclaredDependencies,
+            configuration,
+            dependenciesMap,
+            packageName: imported,
+            identHash,
+            isInDevFile,
+        })
+        undeclaredDependencies.set(imported, { dependencyType, importedFrom })
     }
 
     return undeclaredDependencies

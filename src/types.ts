@@ -23,6 +23,7 @@ export interface AnalysisConfiguration {
     excludePackages: PackageMatchPredicate
     fix: boolean
     skipRoot: boolean
+    alwaysPeerDependencies: PackageMatchPredicate
 }
 
 export interface ImportRecord {
@@ -43,6 +44,13 @@ export interface DependenciesMap {
 
 export type PackageResolutions = Map<string, string>
 
+export type UndeclaredDependencyMap = Map<
+    string,
+    {
+        dependencyType: 'dependencies' | 'devDependencies' | 'peerDependencies'
+        importedFrom: string | undefined
+    }
+>
 export interface Arguments {
     cwd?: string
     includeFiles?: string[]
@@ -51,15 +59,16 @@ export interface Arguments {
     excludePackages?: string[]
     fix?: boolean
     skipRoot?: boolean
+    alwaysPeerDependencies?: string[]
 }
 
 export interface DiffReport {
-    undeclared: Map<string, Set<string>>
+    undeclared: Map<string, UndeclaredDependencyMap>
     unused: Map<string, Set<string>>
 }
 
 export interface Report {
     workspaces: Set<string>
     unusedDependencies: Map<string, Set<string>>
-    undeclaredDependencies: Map<string, Set<string>>
+    undeclaredDependencies: Map<string, UndeclaredDependencyMap>
 }

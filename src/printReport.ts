@@ -1,11 +1,16 @@
+import path from 'path'
+
 import chalk from 'chalk'
 
-import { Report } from './types'
+import { Report, UndeclaredDependencyMap } from './types'
 
 export default function printReport(report: Report): void {
+    const cwd = process.cwd()
+
     for (const workspaceName of report.workspaces) {
         const unused = report.unusedDependencies.get(workspaceName)
-        const undeclared = report.undeclaredDependencies.get(workspaceName)
+        const undeclared: UndeclaredDependencyMap =
+            report.undeclaredDependencies.get(workspaceName) ?? new Map()
 
         console.log('')
         console.log(`📦 ${workspaceName}`)
@@ -22,17 +27,39 @@ export default function printReport(report: Report): void {
         } else {
             console.log(chalk.green('  No unused dependencies!'))
         }
-        if (undeclared && undeclared.size > 0) {
-            console.log(
-                chalk.red(
-                    '  Undeclared dependencies (imported but not declared in package.json)',
-                ),
+
+        const sets = {
+            dependencies: new Map<string, string | undefined>(),
+            devDependencies: new Map<string, string | undefined>(),
+            peerDependencies: new Map<string, string | undefined>(),
+        }
+        for (const [dependency, targetSet] of undeclared.entries()) {
+            sets[targetSet.dependencyType].set(
+                dependency,
+                targetSet.importedFrom
+                    ? path.relative(cwd, targetSet.importedFrom)
+                    : undefined,
             )
-            undeclared.forEach((dependency) => {
-                console.log(`   ↳ ${dependency}`)
-            })
-        } else {
-            console.log(chalk.green('  No undeclared dependencies!'))
+        }
+
+        for (const [setType, dependencySet] of Object.entries(sets)) {
+            if (!dependencySet.size) {
+                console.log(chalk.green(`  No undeclared ${setType}!`))
+            } else {
+                console.log(
+                    chalk.red(
+                        `  Undeclared ${setType} (imported but not declared in package.json):`,
+                    ),
+                )
+                for (const [
+                    dependency,
+                    importedFrom,
+                ] of dependencySet.entries()) {
+                    console.log(
+                        `   ↳ ${dependency}: ${chalk.dim(importedFrom ?? '?')}`,
+                    )
+                }
+            }
         }
     }
 }
