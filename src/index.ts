@@ -1,4 +1,5 @@
 import { structUtils } from '@yarnpkg/core'
+import { npath } from '@yarnpkg/fslib'
 
 import { getConfiguration, getContext } from './utils'
 import getImportsByWorkspaceMap from './getImportsFromWorkspaceMap'
@@ -13,22 +14,27 @@ export default async function validateDependencies(
 ): Promise<Report> {
     // Get context and configuration.
     const configuration = await getConfiguration(args)
-    const context = await getContext(args.cwd)
+    const context = await getContext(configuration, args.cwd)
+    await context.project.restoreInstallState()
 
     // Build dependencies and import map for all workspaces
     const dependenciesMap = await getDependenciesByWorkspaceMap(context)
     const importsMap = await getImportsByWorkspaceMap(context, configuration)
 
     // Diff dependencies and imports by workspace
-    const diffReport = diffDependenciesAndImportsByWorkspace(
+    const diffReport = await diffDependenciesAndImportsByWorkspace(
         context,
+        configuration,
         dependenciesMap,
         importsMap,
     )
 
     const workspaceIdents: Set<string> = new Set()
 
-    for (const workspace of context.project.workspaces) {
+    for (const workspaceCwd of context.workspaceCwds) {
+        const workspace = context.project.getWorkspaceByCwd(
+            npath.toPortablePath(workspaceCwd),
+        )
         if (!workspace.manifest?.name) throw new Error('MISSING_IDENT')
         const ident = structUtils.stringifyIdent(workspace.manifest.name)
         workspaceIdents.add(ident)
@@ -39,7 +45,6 @@ export default async function validateDependencies(
         undeclaredDependencies: diffReport.undeclared,
         unusedDependencies: diffReport.unused,
     }
-
     printReport(report)
     if (configuration.fix) await fixWorkspaces(context, diffReport)
 

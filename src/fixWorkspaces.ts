@@ -2,7 +2,7 @@ import path from 'path'
 import { promises as fs } from 'fs'
 
 import { IdentHash, Manifest, Workspace, structUtils } from '@yarnpkg/core'
-import { PortablePath } from '@yarnpkg/fslib'
+import { PortablePath, npath } from '@yarnpkg/fslib'
 import { npmHttpUtils } from '@yarnpkg/plugin-npm'
 import chalk from 'chalk'
 
@@ -12,7 +12,9 @@ export default async function fixWorkspaces(
     context: Context,
     diffReport: DiffReport,
 ): Promise<void> {
-    const workspaces = context.project.workspaces
+    const workspaces = [...context.workspaceCwds].map((cwd) =>
+        context.project.getWorkspaceByCwd(npath.toPortablePath(cwd)),
+    )
     const resolvedVersionsFromNodeModules = await maybeResolvePackageVersionsFromNodeModules(
         context,
     )
