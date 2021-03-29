@@ -14,9 +14,9 @@ import chalk from 'chalk'
 
 import {
     Context,
-    DependencyNameToSetType,
     DiffReport,
     PackageResolutions,
+    UndeclaredDependencyMap,
 } from './types'
 
 export default async function fixWorkspaces(
@@ -52,7 +52,7 @@ async function fixWorkspace(
     context: Context,
     workspace: Workspace,
     resolvedVersionsFromNodeModules: Map<string, string>,
-    undeclaredDependencies: DependencyNameToSetType,
+    undeclaredDependencies: UndeclaredDependencyMap,
     unusedDependencies: Set<string>,
 ): Promise<void> {
     const workspaceName = workspace?.manifest?.name
@@ -81,14 +81,14 @@ async function fixWorkspace(
 
     for (const [
         dependency,
-        dependencySetType,
+        undeclaredMap,
     ] of undeclaredDependencies.entries()) {
         try {
             const dependencyIdent = structUtils.tryParseIdent(dependency)
 
             if (!dependencyIdent) throw new Error('MISSING_DEPENDENCY_IDENT')
 
-            const dependencySet = toAdd[dependencySetType]
+            const dependencySet = toAdd[undeclaredMap.dependencyType]
 
             if (resolvedVersionsFromNodeModules.has(dependency)) {
                 dependencySet.set(

@@ -5,10 +5,10 @@ import {
     AnalysisConfiguration,
     Context,
     DependenciesMap,
-    DependencyNameToSetType,
     DiffReport,
     ImportRecord,
     ImportRecordsByWorkspaceMap,
+    UndeclaredDependencyMap,
 } from './types'
 
 export default async function diffDependenciesAndImportsByWorkspace(
@@ -20,7 +20,7 @@ export default async function diffDependenciesAndImportsByWorkspace(
     const { workspaces } = context.project
     const undeclaredDependenciesMap: Map<
         string,
-        DependencyNameToSetType
+        UndeclaredDependencyMap
     > = new Map()
     const unusedDependenciesMap: Map<string, Set<string>> = new Map()
     for (const workspace of workspaces) {
@@ -67,7 +67,7 @@ async function guessDependencyType({
     isInDevFile,
 }: {
     configuration: AnalysisConfiguration
-    previousGuesses: DependencyNameToSetType
+    previousGuesses: UndeclaredDependencyMap
     dependenciesMap: DependenciesMap
     packageName: string
     isInDevFile: boolean
@@ -78,7 +78,10 @@ async function guessDependencyType({
     }
 
     const previousGuess = previousGuesses.get(packageName)
-    if (previousGuess === 'dependencies') return previousGuess
+    if (previousGuess?.dependencyType === 'dependencies') {
+        return previousGuess?.dependencyType
+    }
+
     if (isInDevFile) return 'devDependencies'
 
     if (
@@ -96,11 +99,13 @@ async function getUndeclaredDependencies(
     workspace: Workspace,
     dependenciesMap: DependenciesMap,
     imports: Set<ImportRecord>,
-): Promise<DependencyNameToSetType> {
-    const undeclaredDependencies: DependencyNameToSetType = new Map()
+): Promise<UndeclaredDependencyMap> {
+    const undeclaredDependencies: UndeclaredDependencyMap = new Map()
     const devFiles = await fastGlob(configuration.devFiles, {
         cwd: workspace.cwd,
+        absolute: true,
     })
+
     for (const { imported, importedFrom } of imports) {
         const importedIdent = structUtils.parseIdent(imported)
         const identHash = importedIdent.identHash
@@ -119,17 +124,15 @@ async function getUndeclaredDependencies(
         if (dependenciesMap.peerDependencies.has(identHash) && !isInDevFile)
             continue
 
-        undeclaredDependencies.set(
-            imported,
-            await guessDependencyType({
-                previousGuesses: undeclaredDependencies,
-                configuration,
-                dependenciesMap,
-                packageName: imported,
-                identHash,
-                isInDevFile,
-            }),
-        )
+        const dependencyType = await guessDependencyType({
+            previousGuesses: undeclaredDependencies,
+            configuration,
+            dependenciesMap,
+            packageName: imported,
+            identHash,
+            isInDevFile,
+        })
+        undeclaredDependencies.set(imported, { dependencyType, importedFrom })
     }
 
     return undeclaredDependencies

@@ -44,9 +44,12 @@ export interface DependenciesMap {
 
 export type PackageResolutions = Map<string, string>
 
-export type DependencyNameToSetType = Map<
+export type UndeclaredDependencyMap = Map<
     string,
-    'dependencies' | 'devDependencies' | 'peerDependencies'
+    {
+        dependencyType: 'dependencies' | 'devDependencies' | 'peerDependencies'
+        importedFrom: string | undefined
+    }
 >
 export interface Arguments {
     cwd?: string
@@ -60,12 +63,12 @@ export interface Arguments {
 }
 
 export interface DiffReport {
-    undeclared: Map<string, DependencyNameToSetType>
+    undeclared: Map<string, UndeclaredDependencyMap>
     unused: Map<string, Set<string>>
 }
 
 export interface Report {
     workspaces: Set<string>
     unusedDependencies: Map<string, Set<string>>
-    undeclaredDependencies: Map<string, DependencyNameToSetType>
+    undeclaredDependencies: Map<string, UndeclaredDependencyMap>
 }
