@@ -17,7 +17,7 @@ export default function printReport(report: Report): void {
                 ),
             )
             unused.forEach((dependency) => {
-                console.log(`   ⮡ ${dependency}`)
+                console.log(`   ↳ ${dependency}`)
             })
         } else {
             console.log(chalk.green('  No unused dependencies!'))
@@ -29,7 +29,7 @@ export default function printReport(report: Report): void {
                 ),
             )
             undeclared.forEach((dependency) => {
-                console.log(`   ⮡ ${dependency}`)
+                console.log(`   ↳ ${dependency}`)
             })
         } else {
             console.log(chalk.green('  No undeclared dependencies!'))
