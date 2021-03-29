@@ -2,8 +2,8 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import Module from 'module'
 
-import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
+import { parse } from '@babel/parser'
 import { Workspace, structUtils } from '@yarnpkg/core'
 import { npath } from '@yarnpkg/fslib'
 import fastGlob from 'fast-glob'
@@ -27,6 +27,7 @@ export default async function getImportsByWorkspaceMap(
     for (const workspace of workspaces) {
         const collectedImports = await collectImportsFromWorkspace(
             configuration,
+            context,
             workspace,
         )
         importsMap.set(workspace, collectedImports)
@@ -34,8 +35,29 @@ export default async function getImportsByWorkspaceMap(
     return importsMap
 }
 
+async function parseContent(
+    content: string,
+    { sourceFilename }: { sourceFilename: string },
+): Promise<ReturnType<typeof parse>> {
+    return parse(content, {
+        allowAwaitOutsideFunction: true,
+        errorRecovery: true, // skip errors if possible
+        sourceType: 'module',
+        sourceFilename,
+        plugins: [
+            'classProperties',
+            'topLevelAwait',
+            'typescript',
+            'throwExpressions',
+            'jsx',
+            'exportDefaultFrom',
+        ],
+    })
+}
+
 async function collectImportsFromWorkspace(
     configuration: AnalysisConfiguration,
+    context: Context,
     workspace: Workspace,
 ): Promise<Set<ImportRecord>> {
     if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
@@ -77,9 +99,9 @@ async function collectImportsFromWorkspace(
 
     for await (const importedFrom of collectPaths(configuration, workspace)) {
         const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
-        const ast = parse(content, {
-            plugins: ['typescript'],
-            sourceType: 'module',
+
+        const ast = await parseContent(content, {
+            sourceFilename: importedFrom,
         })
 
         const skipLines = new Set<number>()
