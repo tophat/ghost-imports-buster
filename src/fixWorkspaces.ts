@@ -1,20 +1,29 @@
 import path from 'path'
 import { promises as fs } from 'fs'
 
-import { IdentHash, Manifest, Workspace, structUtils } from '@yarnpkg/core'
-import { PortablePath, npath } from '@yarnpkg/fslib'
+import {
+    Descriptor,
+    IdentHash,
+    Manifest,
+    Workspace,
+    structUtils,
+} from '@yarnpkg/core'
+import { PortablePath } from '@yarnpkg/fslib'
 import { npmHttpUtils } from '@yarnpkg/plugin-npm'
 import chalk from 'chalk'
 
-import { Context, DiffReport, PackageResolutions } from './types'
+import {
+    Context,
+    DependencyNameToSetType,
+    DiffReport,
+    PackageResolutions,
+} from './types'
 
 export default async function fixWorkspaces(
     context: Context,
     diffReport: DiffReport,
 ): Promise<void> {
-    const workspaces = [...context.workspaceCwds].map((cwd) =>
-        context.project.getWorkspaceByCwd(npath.toPortablePath(cwd)),
-    )
+    const { workspaces } = context.project
     const resolvedVersionsFromNodeModules = await maybeResolvePackageVersionsFromNodeModules(
         context,
     )
@@ -31,7 +40,7 @@ export default async function fixWorkspaces(
                     context,
                     workspace,
                     resolvedVersionsFromNodeModules,
-                    diffReport.undeclared.get(workspaceIdent) ?? new Set(),
+                    diffReport.undeclared.get(workspaceIdent) ?? new Map(),
                     diffReport.unused.get(workspaceIdent) ?? new Set(),
                 )
             },
@@ -43,7 +52,7 @@ async function fixWorkspace(
     context: Context,
     workspace: Workspace,
     resolvedVersionsFromNodeModules: Map<string, string>,
-    undeclaredDependencies: Set<string>,
+    undeclaredDependencies: DependencyNameToSetType,
     unusedDependencies: Set<string>,
 ): Promise<void> {
     const workspaceName = workspace?.manifest?.name
@@ -62,16 +71,27 @@ async function fixWorkspace(
             .filter((ident) => ident),
     )
 
-    // Collect idents to add.
-    const dependenciesToAdd = new Map()
-    for (const dependency of undeclaredDependencies) {
+    const toAdd = {
+        dependencies: new Map<IdentHash, Descriptor>(),
+        devDependencies: new Map<IdentHash, Descriptor>(),
+        peerDependencies: new Map<IdentHash, Descriptor>(),
+    }
+
+    const distTagsCache = new Map<IdentHash, string>()
+
+    for (const [
+        dependency,
+        dependencySetType,
+    ] of undeclaredDependencies.entries()) {
         try {
             const dependencyIdent = structUtils.tryParseIdent(dependency)
 
             if (!dependencyIdent) throw new Error('MISSING_DEPENDENCY_IDENT')
 
+            const dependencySet = toAdd[dependencySetType]
+
             if (resolvedVersionsFromNodeModules.has(dependency)) {
-                dependenciesToAdd.set(
+                dependencySet.set(
                     dependencyIdent.identHash,
                     structUtils.makeDescriptor(
                         dependencyIdent,
@@ -89,13 +109,22 @@ async function fixWorkspace(
                 jsonResponse: true,
             })
 
-            dependenciesToAdd.set(
-                dependencyIdent.identHash,
-                structUtils.makeDescriptor(
-                    dependencyIdent,
-                    `^${result.latest}`,
-                ),
-            )
+            const cachedVersion = distTagsCache.get(dependencyIdent.identHash)
+            if (cachedVersion) {
+                dependencySet.set(
+                    dependencyIdent.identHash,
+                    structUtils.makeDescriptor(dependencyIdent, cachedVersion),
+                )
+            } else {
+                const version = result.latest ? `^${result.latest}` : '*'
+
+                distTagsCache.set(dependencyIdent.identHash, version)
+
+                dependencySet.set(
+                    dependencyIdent.identHash,
+                    structUtils.makeDescriptor(dependencyIdent, version),
+                )
+            }
         } catch (e) {
             if (e.name === 'HTTPError' && e.response.statusCode === 404) {
                 /* Package does not exist in the registry. */
@@ -105,16 +134,27 @@ async function fixWorkspace(
         }
     }
 
-    for (const dependencyIdentHash of dependenciesToRemove)
-        workspace.manifest.dependencies.delete(dependencyIdentHash as IdentHash)
-
-    for (const dependency of dependenciesToAdd) {
-        const [identHash, descriptor] = dependency
-        workspace.manifest.dependencies.set(identHash, descriptor)
+    for (const dependencyIdentHash of dependenciesToRemove) {
+        if (dependencyIdentHash) {
+            workspace.manifest.dependencies.delete(dependencyIdentHash)
+        }
     }
+
+    let addedDepCount = 0
+
+    for (const [dependencySet, dependenciesToAdd] of Object.entries(toAdd)) {
+        for (const dependency of dependenciesToAdd) {
+            const [identHash, descriptor] = dependency
+            workspace.manifest
+                .getForScope(dependencySet)
+                .set(identHash, descriptor)
+        }
+        addedDepCount += dependenciesToAdd.size
+    }
+
     console.log(
         chalk.green(
-            `(${workspaceIdent}) added ${dependenciesToAdd.size} packages and removed ${dependenciesToRemove.size}.`,
+            `(${workspaceIdent}) added ${addedDepCount} packages and removed ${dependenciesToRemove.size}.`,
         ),
     )
     await workspace.persistManifest()

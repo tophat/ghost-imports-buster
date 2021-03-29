@@ -23,11 +23,14 @@ export async function getConfiguration(
     const excludeFilesFromFile = configurationFromFile.excludeFiles
     const excludePackagesFromFile = configurationFromFile.excludePackages
     const devFilesFromFile = configurationFromFile.devFiles
+    const alwaysPeerDependenciesFromFile =
+        configurationFromFile.alwaysPeerDependencies
 
     const includeFilesFromArgs = args.includeFiles
     const excludeFilesFromArgs = args.excludeFiles
     const excludePackagesFromArgs = args.excludePackages
     const devFilesFromArgs = args.devFiles
+    const alwaysPeerDependenciesFromArgs = args.alwaysPeerDependencies
 
     const includeFiles = (includeFilesFromArgs || includeFilesFromFile) ?? [
         '**/*',
@@ -45,6 +48,13 @@ export async function getConfiguration(
               excludePackagesFromArgs.includes(packageName)
         : excludePackagesFromFile
 
+    const alwaysPeerDependencies:
+        | PackageMatchPredicate
+        | undefined = alwaysPeerDependenciesFromArgs
+        ? (packageName): boolean =>
+              alwaysPeerDependenciesFromArgs.includes(packageName)
+        : alwaysPeerDependenciesFromFile
+
     return {
         includeFiles,
         excludeFiles,
@@ -52,6 +62,8 @@ export async function getConfiguration(
         devFiles,
         fix: args.fix ?? false,
         skipRoot: args.skipRoot ?? false,
+        alwaysPeerDependencies:
+            alwaysPeerDependencies ?? ((): boolean => false),
     }
 }
 
@@ -110,19 +122,27 @@ async function maybeGetConfigurationFromFile(
             excludeFiles,
             excludePackages,
             devFiles,
+            alwaysPeerDependencies,
         } = configuration
 
         const excludePackagesFromConfig =
             typeof excludePackages === 'function'
                 ? excludePackages
-                : (filename: string): boolean =>
-                      excludePackages?.includes?.(filename) ?? false
+                : (packageName: string): boolean =>
+                      excludePackages?.includes?.(packageName) ?? false
+
+        const alwaysPeerDependenciesFromConfig =
+            typeof alwaysPeerDependencies === 'function'
+                ? alwaysPeerDependencies
+                : (packageName: string): boolean =>
+                      alwaysPeerDependencies?.includes?.(packageName) ?? false
 
         return {
             includeFiles,
             excludeFiles,
             excludePackages: excludePackagesFromConfig,
             devFiles,
+            alwaysPeerDependencies: alwaysPeerDependenciesFromConfig,
         }
     } catch (e) {
         /* Configuration unavailable */
