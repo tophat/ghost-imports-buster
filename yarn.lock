@@ -2379,13 +2379,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"agent-base@npm:5":
-  version: 5.1.1
-  resolution: "agent-base@npm:5.1.1"
-  checksum: aff8e856932ba63bbe097ac460f2f474669c5a1ca7674d3be19d4c258b4276a6b71863fb25c8bc3d424320d0c81652044098346403e759a65a76712e697633fa
-  languageName: node
-  linkType: hard
-
 "agent-base@npm:6":
   version: 6.0.2
   resolution: "agent-base@npm:6.0.2"
@@ -3299,18 +3292,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codecov@npm:^3.6.5":
-  version: 3.8.1
-  resolution: "codecov@npm:3.8.1"
+"codecov@npm:3.8.2":
+  version: 3.8.2
+  resolution: "codecov@npm:3.8.2"
   dependencies:
     argv: 0.0.2
     ignore-walk: 3.0.3
-    js-yaml: 3.14.0
-    teeny-request: 6.0.1
+    js-yaml: 3.14.1
+    teeny-request: 7.0.1
     urlgrey: 0.4.4
   bin:
     codecov: bin/codecov
-  checksum: 8aa521fc3bc67d94163a055c92811a223a31454c83c9ff956b12a9347a71aa54fbcd5d2006546162e7828eb0f0bcb8bc7b24d77a276572436623a4aa17bc1100
+  checksum: 1b592a40b0c9c373aeef031d9f8bbfb1b2815f51394d055068dce89f014a6ac851504987ceff6f76292b165b1d2964726eb7dc2517bf911afbdd5a57dff74d6e
   languageName: node
   linkType: hard
 
@@ -4661,7 +4654,7 @@ fsevents@^1.2.7:
     "@yarnpkg/pnpify": ^2.4.0
     babel-jest: ^26.6.3
     chalk: ^4.1.0
-    codecov: ^3.6.5
+    codecov: 3.8.2
     eslint: ^6.6.0
     eslint-config-prettier: ^6.5.0
     eslint-import-resolver-node: ^0.3.4
@@ -4966,13 +4959,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"https-proxy-agent@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "https-proxy-agent@npm:4.0.0"
+"https-proxy-agent@npm:^5.0.0":
+  version: 5.0.1
+  resolution: "https-proxy-agent@npm:5.0.1"
   dependencies:
-    agent-base: 5
+    agent-base: 6
     debug: 4
-  checksum: d3d20730cdcfa1b1ac492280501fa7b14ee89eb4fa2e7d300cc260463b48ea98b6cf1d4b287f40faa8c36c2f88d87819b4b419be5ec4055e9dcd2db501ce4680
+  checksum: 6c9c686235d14d4601ad706eb3d0fe975cd07c056416b2fe62ab5037af4f814c432b73271323289267cd5c322e9dd17fbbeec913f7f7eee46fbdf92e3a0106a8
   languageName: node
   linkType: hard
 
@@ -6040,19 +6033,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:3.14.0":
-  version: 3.14.0
-  resolution: "js-yaml@npm:3.14.0"
-  dependencies:
-    argparse: ^1.0.7
-    esprima: ^4.0.0
-  bin:
-    js-yaml: bin/js-yaml.js
-  checksum: 2eb95464e5263aedc20ae2d9280f0e29b00adab15ece080ec42473d7055efaab24b904108644d115f687efe05a5bde02972b883aafa93607c4c108f667a56fa7
-  languageName: node
-  linkType: hard
-
-"js-yaml@npm:^3.10.0, js-yaml@npm:^3.13.1":
+"js-yaml@npm:3.14.1, js-yaml@npm:^3.10.0, js-yaml@npm:^3.13.1":
   version: 3.14.1
   resolution: "js-yaml@npm:3.14.1"
   dependencies:
@@ -6725,10 +6706,17 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2.2.0":
-  version: 2.6.1
-  resolution: "node-fetch@npm:2.6.1"
-  checksum: cbb171635e538162b977eac5dfe7a1e07a9a02e991924377a6435502291e2f823d306b95aabc455caebf4a118ccf836868462bc70ccc3095af02bb9da61fda37
+"node-fetch@npm:^2.6.1":
+  version: 2.6.7
+  resolution: "node-fetch@npm:2.6.7"
+  dependencies:
+    whatwg-url: ^5.0.0
+  peerDependencies:
+    encoding: ^0.1.0
+  peerDependenciesMeta:
+    encoding:
+      optional: true
+  checksum: 9eef3f9934c690719ece12c1a7e97109bbdbb90a63bbcca57da93a7ee1aa03723ee3d2fffbbea937d7c1ec6e2ba9beb659ab232a9ae6acc42f1a646e0284c136
   languageName: node
   linkType: hard
 
@@ -8729,16 +8717,16 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
-"teeny-request@npm:6.0.1":
-  version: 6.0.1
-  resolution: "teeny-request@npm:6.0.1"
+"teeny-request@npm:7.0.1":
+  version: 7.0.1
+  resolution: "teeny-request@npm:7.0.1"
   dependencies:
     http-proxy-agent: ^4.0.0
-    https-proxy-agent: ^4.0.0
-    node-fetch: ^2.2.0
+    https-proxy-agent: ^5.0.0
+    node-fetch: ^2.6.1
     stream-events: ^1.0.5
-    uuid: ^3.3.2
-  checksum: 8721d128d0ac98043c985f67cd5511fe59f4e31ba0d93512e187c9cf348a51a82722e8f8ed7e1a949a5667f7317ddb40f2f15d57ded193881b3a19e271db0f6e
+    uuid: ^8.0.0
+  checksum: d62a642f1b72b898e7479acf95e9e40252c6808ed259c6e2537d85dd444b8beb461fcd08a6d8c37482ea58906014a9dc4d89c3ac673d1ef0de0f20ee8ee0c8ae
   languageName: node
   linkType: hard
 
@@ -8872,6 +8860,13 @@ resolve@1.1.7:
   dependencies:
     punycode: ^2.1.0
   checksum: 66e2e4d6799d3c2fcc56ad6084e8ab7b3e744f138babc86100e5e2bfaf011231d00d229cfccfaf338da953b96c3ea9128d182274915c1516c5189ee75b7c0ad9
+  languageName: node
+  linkType: hard
+
+"tr46@npm:~0.0.3":
+  version: 0.0.3
+  resolution: "tr46@npm:0.0.3"
+  checksum: 37bdfff7c5b5f8feeb0d06d3fda1d8474d8b08a9f0bf453fd339eb0dc13939ed5a2b24d29d9a308674d6a7267a3a4f3a95e91538b87d0e76c14d83c33899a29f
   languageName: node
   linkType: hard
 
@@ -9106,6 +9101,15 @@ typescript@^3.7.2:
   languageName: node
   linkType: hard
 
+"uuid@npm:^8.0.0":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: aed2bcef341f95635f308fea8831fb9038b18c485fe7e71feb89d2e05602dfecad0cb6f2246fae096d4da425cca6e8a71056f28abd97ad98cf770a2018853248
+  languageName: node
+  linkType: hard
+
 "v8-compile-cache@npm:^2.0.3":
   version: 2.2.0
   resolution: "v8-compile-cache@npm:2.2.0"
@@ -9152,6 +9156,13 @@ typescript@^3.7.2:
   languageName: node
   linkType: hard
 
+"webidl-conversions@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "webidl-conversions@npm:3.0.1"
+  checksum: 25ef547ff199f5a942f367f86c92b79bad77c27ad9baa51ed994de4ee91834d6246a120e24c4d6f2c6aba6b940238a5f6a0ed5f5ab0f24f6a863a2be75dd7644
+  languageName: node
+  linkType: hard
+
 "webidl-conversions@npm:^4.0.2":
   version: 4.0.2
   resolution: "webidl-conversions@npm:4.0.2"
@@ -9172,6 +9183,16 @@ typescript@^3.7.2:
   version: 2.3.0
   resolution: "whatwg-mimetype@npm:2.3.0"
   checksum: 926e6ef8c7e53d158e501ce5e3c0e491d343c3c97e71b3d30451ffe4b1d6f81844c336b46a446a0b4f3fe4f327d76e3451d53ee8055344a0f5f2f35b84518011
+  languageName: node
+  linkType: hard
+
+"whatwg-url@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "whatwg-url@npm:5.0.0"
+  dependencies:
+    tr46: ~0.0.3
+    webidl-conversions: ^3.0.0
+  checksum: 55eca009f57013000f73721611e14cf7215bf2f19e9950b06f3214cfbd29f06eeea759748fa09016a05dca72a2213e49333ef4cbc911ba236a427a0b0060f415
   languageName: node
   linkType: hard
 
