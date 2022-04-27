@@ -1791,6 +1791,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/yargs@npm:16.0.4":
+  version: 16.0.4
+  resolution: "@types/yargs@npm:16.0.4"
+  dependencies:
+    "@types/yargs-parser": "*"
+  checksum: 929334a45c548f78e5aa756282b8abe17c0c7233eaaf414795808ab36a5f9957b3bc8c84151429d919fd2ac04ed2ce99853a85aea65823b4f669643656a3c65e
+  languageName: node
+  linkType: hard
+
 "@types/yargs@npm:^13.0.0":
   version: 13.0.11
   resolution: "@types/yargs@npm:13.0.11"
@@ -1806,15 +1815,6 @@ __metadata:
   dependencies:
     "@types/yargs-parser": "*"
   checksum: fa1a5b0a07dbbff1657a27d1191d586632412d170321000f6f417f279547a8c191d7058dbf4d4187c188a5a1aeb2473ddb25fe316b206fccdfe1de6fad976619
-  languageName: node
-  linkType: hard
-
-"@types/yargs@npm:^16.0.0":
-  version: 16.0.0
-  resolution: "@types/yargs@npm:16.0.0"
-  dependencies:
-    "@types/yargs-parser": "*"
-  checksum: a17fa2814a4c19b7d327c0d6e6ecb9ca6a68fbfded0c1966d0ef6557540c055f7b9c1c1eadde48acb584f75708d4ec96ba59e58e77b8edbb602c23ed3bee76b9
   languageName: node
   linkType: hard
 
@@ -4650,7 +4650,7 @@ fsevents@^1.2.7:
     "@types/jest": ^24.0.23
     "@types/minimatch": ^3.0.3
     "@types/node": ^12.12.7
-    "@types/yargs": ^16.0.0
+    "@types/yargs": 16.0.4
     "@typescript-eslint/eslint-plugin": ^2.7.0
     "@typescript-eslint/parser": ^2.7.0
     "@yarnpkg/cli": ^2.4.0
