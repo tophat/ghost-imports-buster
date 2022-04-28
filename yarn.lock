@@ -1601,12 +1601,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__traverse@npm:*, @types/babel__traverse@npm:^7.0.6, @types/babel__traverse@npm:^7.11.0":
+"@types/babel__traverse@npm:*, @types/babel__traverse@npm:^7.0.6":
   version: 7.11.0
   resolution: "@types/babel__traverse@npm:7.11.0"
   dependencies:
     "@babel/types": ^7.3.0
   checksum: cfb83f1633aafbd447008caf6d40d188a7318ac64d64beaa469dd6d35f72c8298869a6668f082e1116fecf1425654ed0a3dc7fccdc2e18c803b0a7b44f88bec0
+  languageName: node
+  linkType: hard
+
+"@types/babel__traverse@npm:7.17.1":
+  version: 7.17.1
+  resolution: "@types/babel__traverse@npm:7.17.1"
+  dependencies:
+    "@babel/types": ^7.3.0
+  checksum: 3f89ef07187b7b75fb18f5defbaa02d96f3c9c7df829100f6b6ac0c123d06f68055099f2319c076f0b08b66ad260cfc7f68d850a8d803c11a04de5fed4ae6d74
   languageName: node
   linkType: hard
 
@@ -4646,7 +4655,7 @@ fsevents@^1.2.7:
     "@babel/preset-typescript": ^7.13.0
     "@babel/traverse": ^7.13.0
     "@tophat/eslint-config": ^0.3.1
-    "@types/babel__traverse": ^7.11.0
+    "@types/babel__traverse": 7.17.1
     "@types/jest": ^24.0.23
     "@types/minimatch": ^3.0.3
     "@types/node": ^12.12.7
