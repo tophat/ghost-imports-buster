@@ -14,7 +14,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/cli@npm:^7.13.0":
+"@babel/cli@npm:7.13.0":
   version: 7.13.0
   resolution: "@babel/cli@npm:7.13.0"
   dependencies:
@@ -58,7 +58,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:7.13.1, @babel/core@npm:^7.1.0, @babel/core@npm:^7.13.1, @babel/core@npm:^7.7.5":
+"@babel/core@npm:7.13.1, @babel/core@npm:^7.1.0, @babel/core@npm:^7.7.5":
   version: 7.13.1
   resolution: "@babel/core@npm:7.13.1"
   dependencies:
@@ -441,7 +441,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-proposal-nullish-coalescing-operator@npm:^7.13.0":
+"@babel/plugin-proposal-nullish-coalescing-operator@npm:7.13.0, @babel/plugin-proposal-nullish-coalescing-operator@npm:^7.13.0":
   version: 7.13.0
   resolution: "@babel/plugin-proposal-nullish-coalescing-operator@npm:7.13.0"
   dependencies:
@@ -490,7 +490,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-proposal-optional-chaining@npm:^7.13.0":
+"@babel/plugin-proposal-optional-chaining@npm:7.13.0, @babel/plugin-proposal-optional-chaining@npm:^7.13.0":
   version: 7.13.0
   resolution: "@babel/plugin-proposal-optional-chaining@npm:7.13.0"
   dependencies:
@@ -989,7 +989,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-runtime@npm:^7.13.7":
+"@babel/plugin-transform-runtime@npm:7.13.7":
   version: 7.13.7
   resolution: "@babel/plugin-transform-runtime@npm:7.13.7"
   dependencies:
@@ -1097,7 +1097,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-env@npm:^7.13.5":
+"@babel/preset-env@npm:7.13.5":
   version: 7.13.5
   resolution: "@babel/preset-env@npm:7.13.5"
   dependencies:
@@ -1190,7 +1190,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-typescript@npm:^7.13.0":
+"@babel/preset-typescript@npm:7.13.0":
   version: 7.13.0
   resolution: "@babel/preset-typescript@npm:7.13.0"
   dependencies:
@@ -1556,7 +1556,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tophat/eslint-config@npm:^0.3.1":
+"@tophat/eslint-config@npm:0.3.1":
   version: 0.3.1
   resolution: "@tophat/eslint-config@npm:0.3.1"
   peerDependencies:
@@ -1601,7 +1601,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__traverse@npm:*, @types/babel__traverse@npm:^7.0.6, @types/babel__traverse@npm:^7.11.0":
+"@types/babel__traverse@npm:*, @types/babel__traverse@npm:7.11.0, @types/babel__traverse@npm:^7.0.6":
   version: 7.11.0
   resolution: "@types/babel__traverse@npm:7.11.0"
   dependencies:
@@ -1687,7 +1687,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jest@npm:^24.0.23":
+"@types/jest@npm:24.9.1":
   version: 24.9.1
   resolution: "@types/jest@npm:24.9.1"
   dependencies:
@@ -1719,7 +1719,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/minimatch@npm:^3.0.3":
+"@types/minimatch@npm:3.0.3":
   version: 3.0.3
   resolution: "@types/minimatch@npm:3.0.3"
   checksum: 672ccdac197e8176eed1a9441d0caf8a29a90eb139b1cefdd4c9e71b1c48f5c749f5d101a2d85da15c6259214ebda95072835021407d60330a731a2672964b82
@@ -1733,7 +1733,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^12.12.7":
+"@types/node@npm:12.20.4":
   version: 12.20.4
   resolution: "@types/node@npm:12.20.4"
   checksum: 16d002434239f11379819fc3d2a85f0c2652cf9fb0dcaf581e8652b85aef3816bba915552388d7db72f4f6d079822ab0f16a571980eeedb2acceedf2a9e5c940
@@ -1791,6 +1791,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/yargs@npm:16.0.0":
+  version: 16.0.0
+  resolution: "@types/yargs@npm:16.0.0"
+  dependencies:
+    "@types/yargs-parser": "*"
+  checksum: a17fa2814a4c19b7d327c0d6e6ecb9ca6a68fbfded0c1966d0ef6557540c055f7b9c1c1eadde48acb584f75708d4ec96ba59e58e77b8edbb602c23ed3bee76b9
+  languageName: node
+  linkType: hard
+
 "@types/yargs@npm:^13.0.0":
   version: 13.0.11
   resolution: "@types/yargs@npm:13.0.11"
@@ -1809,16 +1818,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/yargs@npm:^16.0.0":
-  version: 16.0.0
-  resolution: "@types/yargs@npm:16.0.0"
-  dependencies:
-    "@types/yargs-parser": "*"
-  checksum: a17fa2814a4c19b7d327c0d6e6ecb9ca6a68fbfded0c1966d0ef6557540c055f7b9c1c1eadde48acb584f75708d4ec96ba59e58e77b8edbb602c23ed3bee76b9
-  languageName: node
-  linkType: hard
-
-"@typescript-eslint/eslint-plugin@npm:^2.7.0":
+"@typescript-eslint/eslint-plugin@npm:2.34.0":
   version: 2.34.0
   resolution: "@typescript-eslint/eslint-plugin@npm:2.34.0"
   dependencies:
@@ -1850,7 +1850,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^2.7.0":
+"@typescript-eslint/parser@npm:2.34.0":
   version: 2.34.0
   resolution: "@typescript-eslint/parser@npm:2.34.0"
   dependencies:
@@ -2258,7 +2258,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/pnpify@npm:^2.4.0":
+"@yarnpkg/pnpify@npm:2.4.0, @yarnpkg/pnpify@npm:^2.4.0":
   version: 2.4.0
   resolution: "@yarnpkg/pnpify@npm:2.4.0"
   dependencies:
@@ -2700,24 +2700,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-jest@npm:^24.9.0":
-  version: 24.9.0
-  resolution: "babel-jest@npm:24.9.0"
-  dependencies:
-    "@jest/transform": ^24.9.0
-    "@jest/types": ^24.9.0
-    "@types/babel__core": ^7.1.0
-    babel-plugin-istanbul: ^5.1.0
-    babel-preset-jest: ^24.9.0
-    chalk: ^2.4.2
-    slash: ^2.0.0
-  peerDependencies:
-    "@babel/core": ^7.0.0
-  checksum: b8b74b2af2242958f29f40c83461f7add1d32d2f3195ec31e6a5e309c1096eab557adac6233d6095a7db505f95ddd07d5f61d0de7c66f263cb8f33c9c45d1562
-  languageName: node
-  linkType: hard
-
-"babel-jest@npm:^26.6.3":
+"babel-jest@npm:26.6.3":
   version: 26.6.3
   resolution: "babel-jest@npm:26.6.3"
   dependencies:
@@ -2732,6 +2715,23 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0
   checksum: 89231d00e6b73e1dc6f009cb97a74edb1af4426f2cfa5d9b71684d1382526651820f8dd301857b9007a44c6b7d1fb77242b201bdea3cff98488b893e9c7d7182
+  languageName: node
+  linkType: hard
+
+"babel-jest@npm:^24.9.0":
+  version: 24.9.0
+  resolution: "babel-jest@npm:24.9.0"
+  dependencies:
+    "@jest/transform": ^24.9.0
+    "@jest/types": ^24.9.0
+    "@types/babel__core": ^7.1.0
+    babel-plugin-istanbul: ^5.1.0
+    babel-preset-jest: ^24.9.0
+    chalk: ^2.4.2
+    slash: ^2.0.0
+  peerDependencies:
+    "@babel/core": ^7.0.0
+  checksum: b8b74b2af2242958f29f40c83461f7add1d32d2f3195ec31e6a5e309c1096eab557adac6233d6095a7db505f95ddd07d5f61d0de7c66f263cb8f33c9c45d1562
   languageName: node
   linkType: hard
 
@@ -3299,7 +3299,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codecov@npm:^3.6.5":
+"codecov@npm:3.8.1":
   version: 3.8.1
   resolution: "codecov@npm:3.8.1"
   dependencies:
@@ -3865,7 +3865,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^6.5.0":
+"eslint-config-prettier@npm:6.15.0":
   version: 6.15.0
   resolution: "eslint-config-prettier@npm:6.15.0"
   dependencies:
@@ -3878,7 +3878,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-import-resolver-node@npm:^0.3.4":
+"eslint-import-resolver-node@npm:0.3.4, eslint-import-resolver-node@npm:^0.3.4":
   version: 0.3.4
   resolution: "eslint-import-resolver-node@npm:0.3.4"
   dependencies:
@@ -3898,7 +3898,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.18.2":
+"eslint-plugin-import@npm:2.22.1":
   version: 2.22.1
   resolution: "eslint-plugin-import@npm:2.22.1"
   dependencies:
@@ -3921,7 +3921,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jest@npm:^23.0.4":
+"eslint-plugin-jest@npm:23.20.0":
   version: 23.20.0
   resolution: "eslint-plugin-jest@npm:23.20.0"
   dependencies:
@@ -3932,7 +3932,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^3.1.1":
+"eslint-plugin-prettier@npm:3.3.1":
   version: 3.3.1
   resolution: "eslint-plugin-prettier@npm:3.3.1"
   dependencies:
@@ -3982,7 +3982,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^6.6.0":
+"eslint@npm:6.8.0":
   version: 6.8.0
   resolution: "eslint@npm:6.8.0"
   dependencies:
@@ -4636,46 +4636,46 @@ fsevents@^1.2.7:
   version: 0.0.0-use.local
   resolution: "ghost-imports-buster@workspace:."
   dependencies:
-    "@babel/cli": ^7.13.0
-    "@babel/core": ^7.13.1
+    "@babel/cli": 7.13.0
+    "@babel/core": 7.13.1
     "@babel/parser": ^7.13.4
-    "@babel/plugin-proposal-nullish-coalescing-operator": ^7.13.0
-    "@babel/plugin-proposal-optional-chaining": ^7.13.0
-    "@babel/plugin-transform-runtime": ^7.13.7
-    "@babel/preset-env": ^7.13.5
-    "@babel/preset-typescript": ^7.13.0
+    "@babel/plugin-proposal-nullish-coalescing-operator": 7.13.0
+    "@babel/plugin-proposal-optional-chaining": 7.13.0
+    "@babel/plugin-transform-runtime": 7.13.7
+    "@babel/preset-env": 7.13.5
+    "@babel/preset-typescript": 7.13.0
     "@babel/traverse": ^7.13.0
-    "@tophat/eslint-config": ^0.3.1
-    "@types/babel__traverse": ^7.11.0
-    "@types/jest": ^24.0.23
-    "@types/minimatch": ^3.0.3
-    "@types/node": ^12.12.7
-    "@types/yargs": ^16.0.0
-    "@typescript-eslint/eslint-plugin": ^2.7.0
-    "@typescript-eslint/parser": ^2.7.0
+    "@tophat/eslint-config": 0.3.1
+    "@types/babel__traverse": 7.11.0
+    "@types/jest": 24.9.1
+    "@types/minimatch": 3.0.3
+    "@types/node": 12.20.4
+    "@types/yargs": 16.0.0
+    "@typescript-eslint/eslint-plugin": 2.34.0
+    "@typescript-eslint/parser": 2.34.0
     "@yarnpkg/cli": ^2.4.0
     "@yarnpkg/core": ^2.4.0
     "@yarnpkg/fslib": ^2.4.0
     "@yarnpkg/plugin-npm": ^2.4.0
     "@yarnpkg/plugin-pack": ^2.2.3
-    "@yarnpkg/pnpify": ^2.4.0
-    babel-jest: ^26.6.3
+    "@yarnpkg/pnpify": 2.4.0
+    babel-jest: 26.6.3
     chalk: ^4.1.0
-    codecov: ^3.6.5
-    eslint: ^6.6.0
-    eslint-config-prettier: ^6.5.0
-    eslint-import-resolver-node: ^0.3.4
-    eslint-plugin-import: ^2.18.2
-    eslint-plugin-jest: ^23.0.4
-    eslint-plugin-prettier: ^3.1.1
-    husky: ^5.1.1
-    jest: ^24.9.0
-    lint-staged: ^10.5.4
+    codecov: 3.8.1
+    eslint: 6.8.0
+    eslint-config-prettier: 6.15.0
+    eslint-import-resolver-node: 0.3.4
+    eslint-plugin-import: 2.22.1
+    eslint-plugin-jest: 23.20.0
+    eslint-plugin-prettier: 3.3.1
+    husky: 5.1.1
+    jest: 24.9.0
+    lint-staged: 10.5.4
     minimatch: ^3.0.4
-    mock-fs: ^4.10.4
-    packwatch: ^1.0.0
-    prettier: ^2.2.1
-    typescript: ^3.7.2
+    mock-fs: 4.13.0
+    packwatch: 1.0.0
+    prettier: 2.2.1
+    typescript: 3.9.9
     yargs: ^16.2.0
   bin:
     ghost-imports-buster: ./lib/cli.js
@@ -4983,7 +4983,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"husky@npm:^5.1.1":
+"husky@npm:5.1.1":
   version: 5.1.1
   resolution: "husky@npm:5.1.1"
   bin:
@@ -6021,7 +6021,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"jest@npm:^24.9.0":
+"jest@npm:24.9.0":
   version: 24.9.0
   resolution: "jest@npm:24.9.0"
   dependencies:
@@ -6298,7 +6298,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"lint-staged@npm:^10.5.4":
+"lint-staged@npm:10.5.4":
   version: 10.5.4
   resolution: "lint-staged@npm:10.5.4"
   dependencies:
@@ -6655,7 +6655,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"mock-fs@npm:^4.10.4":
+"mock-fs@npm:4.13.0":
   version: 4.13.0
   resolution: "mock-fs@npm:4.13.0"
   checksum: cfb2134de7dfa53ebbbbacdd1b4fc834cce99ee9c231e8e129d9d32b669d15936217a7cdef8325946dd4e398ecfc401aa14c79030b8421cdf6ebd904786d8578
@@ -7131,7 +7131,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"packwatch@npm:^1.0.0":
+"packwatch@npm:1.0.0":
   version: 1.0.0
   resolution: "packwatch@npm:1.0.0"
   bin:
@@ -7400,7 +7400,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.2.1":
+"prettier@npm:2.2.1":
   version: 2.2.1
   resolution: "prettier@npm:2.2.1"
   bin:
@@ -8967,7 +8967,7 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
-typescript@^3.7.2:
+typescript@3.9.9:
   version: 3.9.9
   resolution: "typescript@npm:3.9.9"
   bin:
@@ -8977,7 +8977,7 @@ typescript@^3.7.2:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^3.7.2#builtin<compat/typescript>":
+"typescript@patch:typescript@3.9.9#builtin<compat/typescript>":
   version: 3.9.9
   resolution: "typescript@patch:typescript@npm%3A3.9.9#builtin<compat/typescript>::version=3.9.9&hash=a45b0e"
   bin:
