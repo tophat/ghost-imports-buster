@@ -53,7 +53,7 @@
     "mock-fs": "^4.10.4",
     "packwatch": "^1.0.0",
     "prettier": "^2.2.1",
-    "typescript": "^3.7.2"
+    "typescript": "3.9.10"
   },
   "dependencies": {
     "@babel/parser": "^7.13.4",
