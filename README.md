@@ -1,3 +1,5 @@
+> **This project was an idea we had that we weren't able to dedicate the resources to see it through. For this reason, we've archived this repository for now. If there's interest, we may unarchive it.**
+
 # Ghost Imports Buster
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
