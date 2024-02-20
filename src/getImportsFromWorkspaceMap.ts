@@ -1,29 +1,33 @@
-import { promises as fs, readdirSync, statSync } from 'fs'
-import { join } from 'path'
+import { promises as fs } from 'fs'
+import path from 'path'
 import Module from 'module'
 
-import minimatch from 'minimatch'
-import { parse } from '@babel/parser'
 import traverse from '@babel/traverse'
-import { Workspace } from '@yarnpkg/core'
+import { parse } from '@babel/parser'
+import { Workspace, structUtils } from '@yarnpkg/core'
+import { npath } from '@yarnpkg/fslib'
+import fastGlob from 'fast-glob'
 
 import {
     AnalysisConfiguration,
-    BabelParserNode,
     Context,
-    PackagesByWorkspaceMap,
+    ImportRecord,
+    ImportRecordsByWorkspaceMap,
 } from './types'
 
 export default async function getImportsByWorkspaceMap(
     context: Context,
     configuration: AnalysisConfiguration,
-): Promise<PackagesByWorkspaceMap> {
-    const workspaces = context.project.workspaces
-    const importsMap: PackagesByWorkspaceMap = new Map()
+): Promise<ImportRecordsByWorkspaceMap> {
+    const workspaces = [...context.workspaceCwds].map((cwd) =>
+        context.project.getWorkspaceByCwd(npath.toPortablePath(cwd)),
+    )
+    const importsMap: ImportRecordsByWorkspaceMap = new Map()
 
     for (const workspace of workspaces) {
         const collectedImports = await collectImportsFromWorkspace(
             configuration,
+            context,
             workspace,
         )
         importsMap.set(workspace, collectedImports)
@@ -31,45 +35,123 @@ export default async function getImportsByWorkspaceMap(
     return importsMap
 }
 
+async function parseContent(
+    content: string,
+    { sourceFilename }: { sourceFilename: string },
+): Promise<ReturnType<typeof parse>> {
+    return parse(content, {
+        allowAwaitOutsideFunction: true,
+        errorRecovery: true, // skip errors if possible
+        sourceType: 'module',
+        sourceFilename,
+        plugins: [
+            'classProperties',
+            'topLevelAwait',
+            'typescript',
+            'throwExpressions',
+            'jsx',
+            'exportDefaultFrom',
+        ],
+    })
+}
+
 async function collectImportsFromWorkspace(
     configuration: AnalysisConfiguration,
+    context: Context,
     workspace: Workspace,
-): Promise<Set<string>> {
-    const workspaceRoot = workspace.cwd
-    const workspacePaths = collectPaths(configuration, workspaceRoot)
+): Promise<Set<ImportRecord>> {
+    if (!workspace.manifest.name) throw new Error('MISSING_IDENT')
+    const workspaceName = structUtils.stringifyIdent(workspace.manifest.name)
+    const imports: Set<ImportRecord> = new Set()
 
-    const imports: Set<string> = new Set()
+    // match up until path specifier (a "/" not used for scope):
+    //     @scope/name
+    //     name
+    const IMPORT_NAME_PATTERN = /^(?:(@[^/]+\/[^/]+)|([^.][^/]+))/
 
-    const isRelativeImport = (imported: string): boolean =>
-        imported?.startsWith('.')
+    const visitPath = ({
+        importedFrom,
+        imported,
+    }: {
+        importedFrom: string
+        imported: string
+    }): void => {
+        try {
+            if (
+                Module.builtinModules.includes(
+                    require.resolve(imported, { paths: [importedFrom] }),
+                )
+            ) {
+                return
+            }
+        } catch {
+            /* ignore */
+        }
 
-    for (const filePath of workspacePaths) {
-        const content = await fs.readFile(filePath, { encoding: 'utf8' })
-        const ast = parse(content, {
-            plugins: ['typescript'],
-            sourceType: 'module',
+        const importedName = IMPORT_NAME_PATTERN.exec(imported)
+        if (!importedName) return
+
+        imports.add({
+            importedFrom,
+            imported: importedName[0],
+        })
+    }
+
+    for await (const importedFrom of collectPaths(configuration, workspace)) {
+        const content = await fs.readFile(importedFrom, { encoding: 'utf8' })
+
+        const ast = await parseContent(content, {
+            sourceFilename: importedFrom,
         })
 
+        const skipLines = new Set<number>()
+
+        for (const comment of ast.comments ?? []) {
+            if (comment.value.trim() === 'ghost-imports-ignore-next-line') {
+                skipLines.add(comment.loc.end.line + 1)
+            }
+        }
+
         traverse(ast, {
-            ImportDeclaration: function (path: BabelParserNode) {
+            ImportDeclaration: function (path) {
+                if (skipLines.has(path.node.loc?.start.line ?? -1)) return
+
                 const imported = path.node.source.value
-                if (
-                    !isRelativeImport(imported) &&
-                    !Module.builtinModules.includes(imported)
-                )
-                    imports.add(imported)
+                visitPath({ importedFrom, imported })
             },
-            CallExpression: function (path: BabelParserNode) {
-                const callee = path.node.callee.name
-                const argumentType = path.node.arguments[0]?.type
-                const imported = path.node.arguments[0]?.value
-                if (
-                    callee === 'require' &&
-                    argumentType === 'StringLiteral' &&
-                    !isRelativeImport(imported) &&
-                    !Module.builtinModules.includes(imported)
-                ) {
-                    imports.add(imported)
+            CallExpression: function (path) {
+                if (skipLines.has(path.node.loc?.start.line ?? -1)) return
+
+                const predicates = [
+                    // syntax:
+                    //    require('pkg')
+                    //    import('pkg')
+                    (): boolean =>
+                        path.node.callee.type === 'Identifier' &&
+                        ['require', 'import'].includes(path.node.callee.name),
+                    // syntax:
+                    //     require.resolve('pkg')
+                    (): boolean =>
+                        path.node.callee.type === 'MemberExpression' &&
+                        path.node.callee.property.type === 'Identifier' &&
+                        path.node.callee.property.name === 'resolve' &&
+                        path.node.callee.object.type === 'Identifier' &&
+                        path.node.callee.object.name === 'require',
+                ]
+
+                if (predicates.some((p) => p())) {
+                    const argument = path.node.arguments[0]
+                    if (argument?.type === 'StringLiteral') {
+                        visitPath({ importedFrom, imported: argument.value })
+                    } else {
+                        console.warn(
+                            `[${workspaceName}] A non-literal expression has been found in a "require" call, unable to determine import\n` +
+                                `    at %s:%s:%s\n`,
+                            importedFrom,
+                            path.node.loc?.start.line ?? 0,
+                            path.node.loc?.start.column ?? 0,
+                        )
+                    }
                 }
             },
         })
@@ -78,39 +160,33 @@ async function collectImportsFromWorkspace(
     return imports
 }
 
-function collectPaths(
+async function* collectPaths(
     configuration: AnalysisConfiguration,
-    root: string,
-): Set<string> {
-    const rootStat = statSync(root)
+    workspace: Workspace,
+): AsyncIterable<string> {
+    const paths = await fastGlob(configuration.includeFiles, {
+        absolute: true,
+        ignore: configuration.excludeFiles,
+        cwd: workspace.cwd,
+    })
 
-    if (!rootStat.isDirectory()) {
-        const isIncluded = [
-            ...configuration.include,
-        ].some((includedGlob): boolean => minimatch(join(root), includedGlob))
-
-        const isExcluded = [
-            ...configuration.exclude,
-        ].some((excludedGlob: string): boolean =>
-            minimatch(join(root), excludedGlob),
+    for (const filepath of paths) {
+        const basename = path.basename(filepath)
+        // Exclude if dotfile.
+        if (basename.startsWith('.')) continue
+        // Exclude if not part of the current workspace.
+        const discoveredWorkspace = workspace.project.tryWorkspaceByFilePath(
+            npath.toPortablePath(filepath),
         )
-
-        return root.match(/\.(j|t)sx?$/) && isIncluded && !isExcluded
-            ? new Set([root])
-            : new Set()
+        if (
+            !discoveredWorkspace ||
+            !structUtils.areDescriptorsEqual(
+                discoveredWorkspace.anchoredDescriptor,
+                workspace.anchoredDescriptor,
+            )
+        )
+            continue
+        // Include if ts/js source.
+        if (basename.match(/\.(j|t)sx?$/)) yield filepath
     }
-
-    const directoryListing = readdirSync(root)
-
-    const collectedPaths = directoryListing.reduce(
-        (paths: string[], current: string): string[] => {
-            return [
-                ...paths,
-                ...collectPaths(configuration, join(root, current)),
-            ]
-        },
-        [],
-    )
-
-    return new Set(collectedPaths)
 }

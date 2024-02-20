@@ -1,11 +1,15 @@
 import { resolve } from 'path'
-import { promises as fs } from 'fs'
 
-import { Configuration, Project } from '@yarnpkg/core'
+import { Configuration, Project, structUtils } from '@yarnpkg/core'
 import { getPluginConfiguration } from '@yarnpkg/cli'
-import { PortablePath } from '@yarnpkg/fslib'
+import { npath } from '@yarnpkg/fslib'
 
-import { AnalysisConfiguration, Arguments, Context } from './types'
+import {
+    AnalysisConfiguration,
+    Arguments,
+    Context,
+    PackageMatchPredicate,
+} from './types'
 
 export async function getConfiguration(
     args: Arguments,
@@ -14,28 +18,75 @@ export async function getConfiguration(
         getFullCwd(args.cwd),
     )
 
-    const includesFromFile = configurationFromFile.include ?? []
-    const includesFromArgs = args.include ?? []
-    const mergedIncludes = [...includesFromFile, ...includesFromArgs]
+    // TODO: Add support for workspace-level ex
+    const includeFilesFromFile = configurationFromFile.includeFiles
+    const excludeFilesFromFile = configurationFromFile.excludeFiles
+    const excludePackagesFromFile = configurationFromFile.excludePackages
+    const devFilesFromFile = configurationFromFile.devFiles
 
-    const excludesFromFile = configurationFromFile.exclude ?? []
-    const excludesFromArgs = args.exclude ?? []
+    const includeFilesFromArgs = args.includeFiles
+    const excludeFilesFromArgs = args.excludeFiles
+    const excludePackagesFromArgs = args.excludePackages
+    const devFilesFromArgs = args.devFiles
+
+    const includeFiles = (includeFilesFromArgs || includeFilesFromFile) ?? [
+        '**/*',
+    ]
+    const excludeFiles = (excludeFilesFromArgs || excludeFilesFromFile) ?? []
+    const devFiles = (devFilesFromArgs || devFilesFromFile) ?? [
+        '**/__tests__/**',
+        '**/tests/**',
+        '**/*.test.*',
+    ]
+    const excludePackages:
+        | PackageMatchPredicate
+        | undefined = excludePackagesFromArgs
+        ? (packageName): boolean =>
+              excludePackagesFromArgs.includes(packageName)
+        : excludePackagesFromFile
 
     return {
-        include: new Set(mergedIncludes.length ? mergedIncludes : ['**/**']),
-        exclude: new Set([...excludesFromFile, ...excludesFromArgs]),
+        includeFiles,
+        excludeFiles,
+        excludePackages: excludePackages ?? ((): boolean => false),
+        devFiles,
         fix: args.fix ?? false,
+        skipRoot: args.skipRoot ?? false,
     }
 }
 
-export async function getContext(cwd?: string): Promise<Context> {
-    const fullCwd = getFullCwd(cwd) as PortablePath
+export async function getContext(
+    analysisConfig: AnalysisConfiguration,
+    cwd?: string,
+): Promise<Context> {
+    const fullCwd = npath.toPortablePath(getFullCwd(cwd))
     const configuration = await Configuration.find(
         fullCwd,
         getPluginConfiguration(),
     )
-    const { project } = await Project.find(configuration, fullCwd)
-    return { configuration, project, cwd: fullCwd }
+    const { project, workspace } = await Project.find(configuration, fullCwd)
+    if (!workspace) throw new Error('Could not find workspace.')
+
+    const isTopLevelWorkspace = structUtils.areDescriptorsEqual(
+        workspace.anchoredDescriptor,
+        workspace.project.topLevelWorkspace.anchoredDescriptor,
+    )
+    const workspaceCwds = new Set(
+        isTopLevelWorkspace
+            ? project.workspaces
+                  .filter((w) =>
+                      analysisConfig.skipRoot
+                          ? !structUtils.areDescriptorsEqual(
+                                w.anchoredDescriptor,
+                                w.project.topLevelWorkspace.anchoredDescriptor,
+                            )
+                          : w,
+                  )
+                  .map((w) => w.cwd)
+            : [workspace.cwd],
+    )
+
+    return { configuration, project, cwd: workspace.cwd, workspaceCwds }
 }
 
 function getFullCwd(cwd?: string): string {
@@ -46,12 +97,33 @@ async function maybeGetConfigurationFromFile(
     cwd: string,
 ): Promise<Partial<AnalysisConfiguration>> {
     try {
-        const configurationFromFile = await fs.readFile(
-            resolve(cwd, '.ghostImports.json'),
-            { encoding: 'utf8' },
+        const configurationFilePath = require.resolve(
+            npath.toPortablePath('./ghost-imports.config.js'),
+            {
+                paths: [cwd],
+            },
         )
-        const parsedConfiguration = JSON.parse(configurationFromFile)
-        return parsedConfiguration
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const configuration = require(configurationFilePath) || {}
+        const {
+            includeFiles,
+            excludeFiles,
+            excludePackages,
+            devFiles,
+        } = configuration
+
+        const excludePackagesFromConfig =
+            typeof excludePackages === 'function'
+                ? excludePackages
+                : (filename: string): boolean =>
+                      excludePackages?.includes?.(filename) ?? false
+
+        return {
+            includeFiles,
+            excludeFiles,
+            excludePackages: excludePackagesFromConfig,
+            devFiles,
+        }
     } catch (e) {
         /* Configuration unavailable */
         return {}
